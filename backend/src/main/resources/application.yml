@@ -16,6 +16,8 @@ app:
     bootstrap-admin-password: admin123
   storage:
     base-path: uploads
+    # 原型图/上传图片落盘根目录（可填绝对路径，如 D:/ai-assets/prototypes）
+    prototype-base-path: uploads/prototypes
   # 调用大模型（OpenAI 兼容）单次 HTTP 响应超时（秒）；生成用例较慢时可加大
   model:
     request-timeout-seconds: 300

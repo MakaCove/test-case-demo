@@ -18,8 +18,12 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -44,7 +48,10 @@ public class GenerationTaskRunner {
     private final ApiTestCaseService apiTestCaseService;
     private final ObjectMapper objectMapper;
     private final GenerationTaskService generationTaskService;
+    private final RequirementAssetPathResolver requirementAssetPathResolver;
     private final AtomicBoolean running = new AtomicBoolean(false);
+
+    private static final long MAX_IMAGE_BYTES = 4L * 1024 * 1024;
 
     public GenerationTaskRunner(
             GenerationTaskMapper generationTaskMapper,
@@ -56,7 +63,8 @@ public class GenerationTaskRunner {
             TestCaseService testCaseService,
             ApiTestCaseService apiTestCaseService,
             ObjectMapper objectMapper,
-            GenerationTaskService generationTaskService
+            GenerationTaskService generationTaskService,
+            RequirementAssetPathResolver requirementAssetPathResolver
     ) {
         this.generationTaskMapper = generationTaskMapper;
         this.operationLogService = operationLogService;
@@ -68,6 +76,7 @@ public class GenerationTaskRunner {
         this.apiTestCaseService = apiTestCaseService;
         this.objectMapper = objectMapper;
         this.generationTaskService = generationTaskService;
+        this.requirementAssetPathResolver = requirementAssetPathResolver;
     }
 
     @Scheduled(fixedDelay = 1000)
@@ -112,10 +121,12 @@ public class GenerationTaskRunner {
                 }
 
                 List<String> refAssetRelationCodes = extractReferenceAssetRelationCodes(latest.getPayloadJson());
-                String requirementText = buildRequirementContext(latest.getVersionId(), refAssetRelationCodes);
+                String requirementText = buildRequirementTextForModel(latest.getVersionId(), refAssetRelationCodes);
+                List<String> imageDataUrls = loadPrototypeImageDataUrls(latest.getVersionId(), refAssetRelationCodes);
 
                 String prompt = tpl.getContent();
-                ModelClient.ModelCallResult result = modelClient.chatCompletion(cfg, prompt, requirementText);
+                ModelClient.ModelChatInput chatInput = new ModelClient.ModelChatInput(prompt, requirementText, imageDataUrls);
+                ModelClient.ModelCallResult result = modelClient.chatCompletion(cfg, chatInput);
 
                 String caseCategory = StringUtils.hasText(latest.getCaseCategory()) ? latest.getCaseCategory() : "FUNCTIONAL";
                 int createdCases;
@@ -249,7 +260,10 @@ public class GenerationTaskRunner {
         }
     }
 
-    private String buildRequirementContext(Long versionId, List<String> assetRelationCodes) {
+    /**
+     * 组装给模型的文字上下文：手工需求描述 + 需求文档已提取正文；若存在原型图则文字中提示已附图。
+     */
+    private String buildRequirementTextForModel(Long versionId, List<String> assetRelationCodes) {
         StringBuilder sb = new StringBuilder();
 
         LambdaQueryWrapper<RequirementAssetEntity> textWrapper = new LambdaQueryWrapper<RequirementAssetEntity>()
@@ -273,16 +287,35 @@ public class GenerationTaskRunner {
         if (assetRelationCodes != null && !assetRelationCodes.isEmpty()) {
             docsWrapper.in(RequirementAssetEntity::getRelationCode, assetRelationCodes);
         }
-        var docs = requirementAssetMapper.selectList(docsWrapper
-                .orderByAsc(RequirementAssetEntity::getId));
+        var docs = requirementAssetMapper.selectList(docsWrapper.orderByAsc(RequirementAssetEntity::getId));
         if (!docs.isEmpty()) {
-            sb.append("【需求文档列表】\n");
+            sb.append("【需求文档（已提取正文）】\n");
             for (RequirementAssetEntity a : docs) {
-                sb.append("- ").append(a.getTitle() != null ? a.getTitle() : a.getFileName()).append("\n");
+                if (!StringUtils.hasText(a.getContent())) {
+                    continue;
+                }
+                sb.append("--- ").append(a.getTitle() != null ? a.getTitle() : a.getFileName()).append(" ---\n");
+                sb.append(a.getContent()).append("\n\n");
             }
-            sb.append("\n");
         }
 
+        LambdaQueryWrapper<RequirementAssetEntity> protoCountWrapper = new LambdaQueryWrapper<RequirementAssetEntity>()
+                .eq(RequirementAssetEntity::getIsDeleted, 0)
+                .eq(RequirementAssetEntity::getVersionId, versionId)
+                .eq(RequirementAssetEntity::getAssetType, "PROTOTYPE");
+        if (assetRelationCodes != null && !assetRelationCodes.isEmpty()) {
+            protoCountWrapper.in(RequirementAssetEntity::getRelationCode, assetRelationCodes);
+        }
+        long protoCount = requirementAssetMapper.selectCount(protoCountWrapper);
+        if (protoCount > 0) {
+            sb.append("【说明】已附原型图 ").append(protoCount).append(" 张，请结合图片与上文需求生成测试用例。\n");
+        }
+
+        String result = sb.toString().trim();
+        return result.isEmpty() ? null : result;
+    }
+
+    private List<String> loadPrototypeImageDataUrls(Long versionId, List<String> assetRelationCodes) throws IOException {
         LambdaQueryWrapper<RequirementAssetEntity> protoWrapper = new LambdaQueryWrapper<RequirementAssetEntity>()
                 .eq(RequirementAssetEntity::getIsDeleted, 0)
                 .eq(RequirementAssetEntity::getVersionId, versionId)
@@ -290,18 +323,28 @@ public class GenerationTaskRunner {
         if (assetRelationCodes != null && !assetRelationCodes.isEmpty()) {
             protoWrapper.in(RequirementAssetEntity::getRelationCode, assetRelationCodes);
         }
-        var protos = requirementAssetMapper.selectList(protoWrapper
-                .orderByAsc(RequirementAssetEntity::getId));
-        if (!protos.isEmpty()) {
-            sb.append("【原型图列表】\n");
-            for (RequirementAssetEntity a : protos) {
-                sb.append("- ").append(a.getTitle() != null ? a.getTitle() : a.getFileName()).append("\n");
+        var protos = requirementAssetMapper.selectList(protoWrapper.orderByAsc(RequirementAssetEntity::getId));
+        List<String> out = new ArrayList<>();
+        for (RequirementAssetEntity a : protos) {
+            Path path = requirementAssetPathResolver.resolve(a);
+            if (path == null || !Files.exists(path)) {
+                log.warn("prototype file missing for model, assetId={}, filePath={}", a.getId(), a.getFilePath());
+                continue;
             }
-            sb.append("\n");
+            long size = Files.size(path);
+            if (size > MAX_IMAGE_BYTES) {
+                log.warn("prototype file too large, skip, assetId={}, size={}", a.getId(), size);
+                continue;
+            }
+            byte[] bytes = Files.readAllBytes(path);
+            String mime = StringUtils.hasText(a.getMimeType()) ? a.getMimeType().trim() : Files.probeContentType(path);
+            if (!StringUtils.hasText(mime)) {
+                mime = "image/png";
+            }
+            String b64 = Base64.getEncoder().encodeToString(bytes);
+            out.add("data:" + mime + ";base64," + b64);
         }
-
-        String result = sb.toString().trim();
-        return result.isEmpty() ? null : result;
+        return out;
     }
 }
 

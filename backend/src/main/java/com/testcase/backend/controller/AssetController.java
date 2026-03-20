@@ -12,6 +12,7 @@ import com.testcase.backend.entity.RequirementAssetEntity;
 import com.testcase.backend.mapper.ProjectMapper;
 import com.testcase.backend.mapper.ProjectVersionMapper;
 import com.testcase.backend.mapper.RequirementAssetMapper;
+import com.testcase.backend.service.DocumentTextExtractor;
 import com.testcase.backend.service.OperationLogService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -57,20 +58,26 @@ public class AssetController {
     private final ProjectVersionMapper projectVersionMapper;
     private final ProjectMapper projectMapper;
     private final OperationLogService operationLogService;
+    private final DocumentTextExtractor documentTextExtractor;
 
     @Value("${app.storage.base-path:uploads}")
     private String storageBasePath;
+
+    @Value("${app.storage.prototype-base-path:uploads/prototypes}")
+    private String prototypeBasePath;
 
     public AssetController(
             RequirementAssetMapper requirementAssetMapper,
             ProjectVersionMapper projectVersionMapper,
             ProjectMapper projectMapper,
-            OperationLogService operationLogService
+            OperationLogService operationLogService,
+            DocumentTextExtractor documentTextExtractor
     ) {
         this.requirementAssetMapper = requirementAssetMapper;
         this.projectVersionMapper = projectVersionMapper;
         this.projectMapper = projectMapper;
         this.operationLogService = operationLogService;
+        this.documentTextExtractor = documentTextExtractor;
     }
 
     @PostMapping("/versions/{versionId}/requirements/text")
@@ -103,9 +110,10 @@ public class AssetController {
     public ApiResponse<AssetDtos.AssetItem> uploadRequirementFile(
             @PathVariable Long versionId,
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "relationCode", required = false) String relationCode
+            @RequestParam(value = "relationCode", required = false) String relationCode,
+            @RequestParam(value = "title", required = false) String title
     ) throws IOException {
-        return ApiResponse.success(saveUploadedAsset(versionId, file, TYPE_FILE, relationCode));
+        return ApiResponse.success(saveRequirementDocumentExtracted(versionId, file, relationCode, title));
     }
 
     @PostMapping(value = "/versions/{versionId}/prototypes/files", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -114,7 +122,7 @@ public class AssetController {
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "relationCode", required = false) String relationCode
     ) throws IOException {
-        return ApiResponse.success(saveUploadedAsset(versionId, file, TYPE_PROTOTYPE, relationCode));
+        return ApiResponse.success(savePrototypeToConfiguredFolder(versionId, file, relationCode));
     }
 
     @GetMapping("/versions/{versionId}/assets")
@@ -190,8 +198,10 @@ public class AssetController {
         }
         var before = toItem(entity);
         entity.setTitle(request.title().trim());
-        if (TYPE_TEXT.equals(entity.getAssetType())) {
-            entity.setContent(request.content());
+        if (TYPE_TEXT.equals(entity.getAssetType()) || TYPE_FILE.equals(entity.getAssetType())) {
+            if (request.content() != null) {
+                entity.setContent(request.content());
+            }
         }
         entity.setUpdatedBy(1L);
         entity.setUpdatedAt(now);
@@ -271,7 +281,56 @@ public class AssetController {
         return ApiResponse.success(null);
     }
 
-    private AssetDtos.AssetItem saveUploadedAsset(Long versionId, MultipartFile file, String assetType, String relationCode) throws IOException {
+    /**
+     * 需求文档：解析正文写入 {@code content}，不在磁盘保留原件。
+     */
+    private AssetDtos.AssetItem saveRequirementDocumentExtracted(Long versionId, MultipartFile file, String relationCode, String titleOverride) throws IOException {
+        VersionContext ctx = assertVersionExists(versionId);
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("file is required");
+        }
+        LocalDateTime now = LocalDateTime.now();
+        String originalName = file.getOriginalFilename();
+        String safeName = StringUtils.hasText(originalName) ? Paths.get(originalName).getFileName().toString() : "document.bin";
+        String extracted = documentTextExtractor.extractAsPlainText(file);
+        if (!StringUtils.hasText(extracted)) {
+            throw new IllegalArgumentException("未能从文档中提取正文，请检查文件格式或内容是否为空");
+        }
+
+        String displayTitle = StringUtils.hasText(titleOverride) ? titleOverride.trim() : safeName;
+        if (!StringUtils.hasText(displayTitle)) {
+            displayTitle = safeName;
+        }
+
+        RequirementAssetEntity entity = new RequirementAssetEntity();
+        entity.setProjectId(ctx.project().getId());
+        entity.setVersionId(versionId);
+        entity.setAssetCode(generateAssetCode(versionId));
+        entity.setRelationCode(resolveRelationCode(relationCode, ctx.project(), ctx.version()));
+        entity.setAssetType(TYPE_FILE);
+        entity.setTitle(displayTitle.length() > 255 ? displayTitle.substring(0, 255) : displayTitle);
+        entity.setContent(extracted);
+        entity.setFileName(safeName);
+        entity.setFilePath(null);
+        entity.setFileSize(file.getSize());
+        entity.setMimeType(file.getContentType());
+        entity.setSource("UPLOAD");
+        entity.setCreatedBy(1L);
+        entity.setUpdatedBy(1L);
+        entity.setCreatedAt(now);
+        entity.setUpdatedAt(now);
+        entity.setIsDeleted(0);
+        requirementAssetMapper.insert(entity);
+        operationLogService.log("ASSET", entity.getId(), "UPLOAD_" + TYPE_FILE + "_EXTRACTED", null, entity, null);
+        log.info("requirement doc extracted, assetId={}, versionId={}, fileName={}, contentLen={}", entity.getId(), versionId, safeName, extracted.length());
+        return toItem(entity);
+    }
+
+    /**
+     * 原型图：二进制保存到 {@code app.storage.prototype-base-path} 下按日期分子目录。
+     * {@code file_path} 存相对 prototype-base-path 的路径：{@code yyyyMMdd/uuid_original}。
+     */
+    private AssetDtos.AssetItem savePrototypeToConfiguredFolder(Long versionId, MultipartFile file, String relationCode) throws IOException {
         VersionContext ctx = assertVersionExists(versionId);
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("file is required");
@@ -280,19 +339,19 @@ public class AssetController {
         String originalName = file.getOriginalFilename();
         String safeName = StringUtils.hasText(originalName) ? Paths.get(originalName).getFileName().toString() : "unnamed.bin";
         String dateDir = LocalDate.now().toString().replace("-", "");
-        Path dirPath = Paths.get(storageBasePath, "assets", dateDir);
+        Path dirPath = Paths.get(prototypeBasePath, dateDir);
         Files.createDirectories(dirPath);
         String storedFileName = UUID.randomUUID() + "_" + safeName;
         Path savedPath = dirPath.resolve(storedFileName);
         file.transferTo(savedPath);
-        String relativePath = Paths.get("assets", dateDir, storedFileName).toString().replace("\\", "/");
+        String relativePath = Paths.get(dateDir, storedFileName).toString().replace("\\", "/");
 
         RequirementAssetEntity entity = new RequirementAssetEntity();
         entity.setProjectId(ctx.project().getId());
         entity.setVersionId(versionId);
         entity.setAssetCode(generateAssetCode(versionId));
         entity.setRelationCode(resolveRelationCode(relationCode, ctx.project(), ctx.version()));
-        entity.setAssetType(assetType);
+        entity.setAssetType(TYPE_PROTOTYPE);
         entity.setTitle(safeName);
         entity.setFileName(safeName);
         entity.setFilePath(relativePath);
@@ -305,8 +364,8 @@ public class AssetController {
         entity.setUpdatedAt(now);
         entity.setIsDeleted(0);
         requirementAssetMapper.insert(entity);
-        operationLogService.log("ASSET", entity.getId(), "UPLOAD_" + assetType, null, entity, null);
-        log.info("asset uploaded, assetId={}, versionId={}, assetType={}, fileName={}", entity.getId(), versionId, assetType, safeName);
+        operationLogService.log("ASSET", entity.getId(), "UPLOAD_" + TYPE_PROTOTYPE, null, entity, null);
+        log.info("prototype uploaded, assetId={}, versionId={}, fileName={}, path={}", entity.getId(), versionId, safeName, relativePath);
         return toItem(entity);
     }
 

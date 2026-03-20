@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { computed, inject, onMounted, ref } from 'vue'
+import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import type { UploadInstance, UploadProps } from 'element-plus'
+import { Document, Picture, Upload } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { api, type Project, type Version } from '../api/api'
 import { formatDateTime } from '../utils/formatDateTime'
+import { formatBytes } from '../utils/formatBytes'
 
 const tableDensity = inject('tableDensity', ref<'default' | 'small'>('default'))
 const router = useRouter()
@@ -53,14 +56,60 @@ const editingRow = ref<AssetGroupRow | null>(null)
 const editingAssets = ref<any[]>([])
 const createProjectId = ref('')
 const createVersionId = ref('')
-const createModeText = ref(true)
-const createModeReqDoc = ref(true)
-const createModePrototype = ref(true)
+/** 需求描述（手动）与需求文档（上传提取）二选一 */
+const requirementInputMode = ref<'TEXT' | 'FILE'>('TEXT')
+const createModePrototype = ref(false)
 const createTitle = ref('')
 const createContent = ref('')
 const createReqFile = ref<File | null>(null)
 const createProtoFile = ref<File | null>(null)
 const creating = ref(false)
+
+const reqUploadRef = ref<UploadInstance>()
+const protoUploadRef = ref<UploadInstance>()
+
+/** 编辑态：当前已入库的需求文档资产（用于展示文件名，非新选文件） */
+const editingFileAsset = computed(() => {
+  if (!isEditing.value) return null
+  return editingAssets.value.find((a: { assetType?: string }) => a.assetType === 'FILE') ?? null
+})
+
+function clearDialogUploads() {
+  reqUploadRef.value?.clearFiles()
+  protoUploadRef.value?.clearFiles()
+}
+
+const onReqFileChange: UploadProps['onChange'] = (uploadFile) => {
+  createReqFile.value = (uploadFile.raw as File) || null
+}
+
+const onReqFileRemove: UploadProps['onRemove'] = () => {
+  createReqFile.value = null
+}
+
+const onReqExceed: UploadProps['onExceed'] = () => {
+  ElMessage.warning('请先移除已选文件，再重新选择')
+}
+
+const onProtoFileChange: UploadProps['onChange'] = (uploadFile) => {
+  createProtoFile.value = (uploadFile.raw as File) || null
+}
+
+const onProtoFileRemove: UploadProps['onRemove'] = () => {
+  createProtoFile.value = null
+}
+
+const onProtoExceed: UploadProps['onExceed'] = () => {
+  ElMessage.warning('请先移除已选图片，再重新选择')
+}
+
+/** 切回「手动描述」时清掉已选文档，避免误以为是双录入 */
+watch(requirementInputMode, (m) => {
+  if (m === 'TEXT') {
+    createReqFile.value = null
+    void nextTick(() => reqUploadRef.value?.clearFiles())
+  }
+})
 
 const safeProjectId = computed(() => {
   const value = Number(projectIdInput.value.trim())
@@ -98,6 +147,14 @@ function versionDisplay(row: AssetGroupRow): string {
     return `${no} · ${vn}`
   }
   return `版本#${row.versionId}`
+}
+
+/** 与新建弹窗「手动描述 / 文档提取」二选一逻辑对齐；混合为历史批次 */
+function requirementEntryLabel(row: AssetGroupRow): string {
+  if (row.hasText && row.hasFile) return '混合'
+  if (row.hasText) return '手动'
+  if (row.hasFile) return '文档'
+  return '—'
 }
 
 async function loadProjects() {
@@ -179,7 +236,7 @@ async function loadAssets() {
           projectCode: asset.projectCode,
           versionName: asset.versionName,
           versionNo: asset.versionNo,
-          title: asset.assetType === 'TEXT' ? asset.title || '' : '',
+          title: asset.assetType === 'TEXT' || asset.assetType === 'FILE' ? asset.title || '' : '',
           hasText: asset.assetType === 'TEXT',
           hasFile: asset.assetType === 'FILE',
           hasPrototype: asset.assetType === 'PROTOTYPE',
@@ -199,6 +256,8 @@ async function loadAssets() {
       current.hasFile = current.hasFile || asset.assetType === 'FILE'
       current.hasPrototype = current.hasPrototype || asset.assetType === 'PROTOTYPE'
       if (asset.assetType === 'TEXT' && asset.title) {
+        current.title = asset.title
+      } else if (asset.assetType === 'FILE' && asset.title && !current.title) {
         current.title = asset.title
       } else if (!current.title && asset.title) {
         current.title = asset.title
@@ -278,12 +337,12 @@ function openCreateDialog() {
   createContent.value = ''
   createReqFile.value = null
   createProtoFile.value = null
-  createModeText.value = true
-  createModeReqDoc.value = true
-  createModePrototype.value = true
+  requirementInputMode.value = 'TEXT'
+  createModePrototype.value = false
   createProjectId.value = projectIdInput.value
   createVersionId.value = versionIdInput.value
   createVisible.value = true
+  void nextTick(() => clearDialogUploads())
   if (safeCreateProjectId.value) {
     loadVersionsForCreateProject()
   }
@@ -313,14 +372,20 @@ async function openEditDialog(row: AssetGroupRow) {
   const assets = await loadAssetsForRow(row)
   editingAssets.value = assets
   const textAsset = assets.find((a) => a.assetType === 'TEXT')
-  const hasFile = assets.some((a) => a.assetType === 'FILE')
+  const fileAsset = assets.find((a) => a.assetType === 'FILE')
   const hasPrototype = assets.some((a) => a.assetType === 'PROTOTYPE')
-  createModeText.value = Boolean(textAsset)
-  createModeReqDoc.value = hasFile
+  if (fileAsset && !textAsset) {
+    requirementInputMode.value = 'FILE'
+    createTitle.value = fileAsset.title || row.title || ''
+    createContent.value = fileAsset.content || ''
+  } else {
+    requirementInputMode.value = 'TEXT'
+    createTitle.value = textAsset?.title || row.title || ''
+    createContent.value = textAsset?.content || ''
+  }
   createModePrototype.value = hasPrototype
-  createTitle.value = textAsset?.title || row.title || ''
-  createContent.value = textAsset?.content || ''
   createVisible.value = true
+  void nextTick(() => clearDialogUploads())
 }
 
 function getBatchRelationCodeForEdit() {
@@ -339,10 +404,18 @@ async function submitEdit() {
   const prototypeAssets = currentAssets.filter((a) => a.assetType === 'PROTOTYPE')
   let relationCode = getBatchRelationCodeForEdit()
 
-  if (createModeText.value) {
-    if (!createTitle.value.trim() || !createContent.value.trim()) {
-      ElMessage.warning('需求描述：标题和内容不能为空')
+  if (!createTitle.value.trim()) {
+    ElMessage.warning('请填写标题')
+    return
+  }
+
+  if (requirementInputMode.value === 'TEXT') {
+    if (!createContent.value.trim()) {
+      ElMessage.warning('需求描述内容不能为空')
       return
+    }
+    for (const item of fileAssets) {
+      await api.deleteAsset(item.id)
     }
     if (textAsset) {
       await api.updateAsset(textAsset.id, { title: createTitle.value.trim(), content: createContent.value })
@@ -355,23 +428,22 @@ async function submitEdit() {
       })
       relationCode = newText.relationCode || relationCode
     }
-  } else if (textAsset) {
-    await api.deleteAsset(textAsset.id)
-  }
-
-  if (createModeReqDoc.value) {
+  } else {
+    if (textAsset) {
+      await api.deleteAsset(textAsset.id)
+    }
     if (createReqFile.value) {
       for (const item of fileAssets) {
         await api.deleteAsset(item.id)
       }
-      await api.uploadRequirementFile(versionId, createReqFile.value, relationCode)
+      await api.uploadRequirementFile(versionId, createReqFile.value, relationCode, createTitle.value.trim())
     } else if (fileAssets.length === 0) {
-      ElMessage.warning('请上传需求文档附件')
+      ElMessage.warning('请上传需求文档，或切换到「需求描述」模式')
       return
-    }
-  } else {
-    for (const item of fileAssets) {
-      await api.deleteAsset(item.id)
+    } else {
+      for (const item of fileAssets) {
+        await api.updateAsset(item.id, { title: createTitle.value.trim() })
+      }
     }
   }
 
@@ -397,22 +469,23 @@ async function submitCreate() {
     ElMessage.warning('请选择项目和版本')
     return
   }
-  if (!createModeText.value && !createModeReqDoc.value && !createModePrototype.value) {
-    ElMessage.warning('请至少选择一种资产类型')
+  if (!createTitle.value.trim()) {
+    ElMessage.warning('请填写标题')
     return
   }
-  if (createModeText.value) {
-    if (!createTitle.value.trim() || !createContent.value.trim()) {
-      ElMessage.warning('需求描述：标题和内容不能为空')
+  if (requirementInputMode.value === 'TEXT') {
+    if (!createContent.value.trim()) {
+      ElMessage.warning('需求描述内容不能为空')
+      return
+    }
+  } else {
+    if (!createReqFile.value) {
+      ElMessage.warning('请上传需求文档（系统将提取正文入库）')
       return
     }
   }
-  if (createModeReqDoc.value && !createReqFile.value) {
-    ElMessage.warning('请上传需求文档附件')
-    return
-  }
   if (createModePrototype.value && !createProtoFile.value) {
-    ElMessage.warning('请上传原型图附件')
+    ElMessage.warning('已勾选附带原型图，请选择图片文件')
     return
   }
   creating.value = true
@@ -428,7 +501,7 @@ async function submitCreate() {
     const versionId = safeCreateVersionId.value
     let batchRelationCode = `RC-MANUAL-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
     const actions: string[] = []
-    if (createModeText.value) {
+    if (requirementInputMode.value === 'TEXT') {
       const textAsset = await api.createTextAsset(versionId, {
         title: createTitle.value.trim(),
         content: createContent.value,
@@ -441,11 +514,18 @@ async function submitCreate() {
         batchRelationCode = textAsset.relationCode
       }
       actions.push('需求描述')
-    }
-    if (createModeReqDoc.value && createReqFile.value) {
-      const reqAsset = await api.uploadRequirementFile(versionId, createReqFile.value, batchRelationCode)
+    } else {
+      const reqAsset = await api.uploadRequirementFile(
+        versionId,
+        createReqFile.value!,
+        batchRelationCode,
+        createTitle.value.trim(),
+      )
       if (!reqAsset?.id) {
         throw new Error('后端未返回需求文档资产数据')
+      }
+      if (reqAsset.relationCode) {
+        batchRelationCode = reqAsset.relationCode
       }
       actions.push('需求文档')
     }
@@ -464,14 +544,6 @@ async function submitCreate() {
   } finally {
     creating.value = false
   }
-}
-
-function onPickReqFile(file: File) {
-  createReqFile.value = file
-}
-
-function onPickProtoFile(file: File) {
-  createProtoFile.value = file
 }
 
 function openDetail(row: AssetGroupRow) {
@@ -557,7 +629,7 @@ onMounted(async () => {
               :value="String(v.id)"
             />
           </el-select>
-          <el-input v-model="keyword" placeholder="标题" clearable style="width: 220px" />
+          <el-input v-model="keyword" placeholder="标题关键词" clearable style="width: 220px" />
         </div>
         <div class="query-actions">
           <el-button type="primary" @click="onSearch">查询</el-button>
@@ -581,11 +653,24 @@ onMounted(async () => {
       <el-table-column label="版本（版本号 · 名称）" min-width="200" show-overflow-tooltip>
         <template #default="{ row }">{{ versionDisplay(row) }}</template>
       </el-table-column>
-      <el-table-column prop="title" label="标题" min-width="260" />
-      <el-table-column label="需求描述" width="100">
+      <el-table-column prop="title" label="标题" min-width="260" show-overflow-tooltip />
+      <el-table-column label="录入方式" width="92" align="center">
+        <template #default="{ row }">
+          <span v-if="!row.hasText && !row.hasFile">—</span>
+          <el-tag
+            v-else
+            :type="row.hasText && row.hasFile ? 'warning' : row.hasText ? 'success' : 'info'"
+            effect="plain"
+            size="small"
+          >
+            {{ requirementEntryLabel(row) }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="手动描述" width="92" align="center">
         <template #default="{ row }">{{ row.hasText ? '有' : '无' }}</template>
       </el-table-column>
-      <el-table-column label="需求文档" width="100">
+      <el-table-column label="文档录入" width="92" align="center">
         <template #default="{ row }">{{ row.hasFile ? '有' : '无' }}</template>
       </el-table-column>
       <el-table-column label="原型图" width="100">
@@ -620,81 +705,216 @@ onMounted(async () => {
       />
     </div>
 
-    <el-dialog v-model="createVisible" :title="createDialogTitle" width="860px" :close-on-click-modal="false">
-      <el-form label-position="top">
-        <div class="create-grid">
-          <el-form-item label="项目（必选）">
-            <el-select
-              v-model="createProjectId"
-              filterable
-              :clearable="!isEditing"
-              :loading="projectsLoading"
-              placeholder="选择项目"
-              :disabled="isEditing"
-              @change="() => { if (!isEditing) loadVersionsForCreateProject() }"
-            >
-              <el-option v-for="p in projects" :key="p.id" :label="`${p.name}（${p.code}）`" :value="String(p.id)" />
-            </el-select>
+    <el-dialog
+      v-model="createVisible"
+      :title="createDialogTitle"
+      width="720px"
+      :close-on-click-modal="false"
+      class="assets-create-dialog"
+      destroy-on-close
+    >
+      <el-form label-position="top" class="asset-dialog-form">
+        <el-card shadow="never" class="dialog-section-card">
+          <template #header>
+            <div class="section-card-header">
+              <span class="section-title">基础信息</span>
+              <el-text v-if="isEditing" type="info" size="small">项目、版本不可修改</el-text>
+            </div>
+          </template>
+          <div class="create-grid">
+            <el-form-item label="项目" required>
+              <el-select
+                v-model="createProjectId"
+                filterable
+                :clearable="!isEditing"
+                :loading="projectsLoading"
+                placeholder="请选择项目"
+                :disabled="isEditing"
+                @change="() => { if (!isEditing) loadVersionsForCreateProject() }"
+              >
+                <el-option v-for="p in projects" :key="p.id" :label="`${p.name}（${p.code}）`" :value="String(p.id)" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="版本" required>
+              <el-select
+                v-model="createVersionId"
+                filterable
+                :clearable="!isEditing"
+                :loading="versionsLoading"
+                placeholder="请选择版本"
+                :disabled="isEditing"
+              >
+                <el-option
+                  v-for="v in versions"
+                  :key="v.id"
+                  :label="`${v.versionNo}${v.name ? ' - ' + v.name : ''}`"
+                  :value="String(v.id)"
+                />
+              </el-select>
+            </el-form-item>
+          </div>
+          <el-form-item label="标题" required>
+            <el-input
+              v-model="createTitle"
+              maxlength="120"
+              show-word-limit
+              clearable
+              placeholder="列表展示用，与下方录入方式无关"
+            />
           </el-form-item>
-          <el-form-item label="版本（必选）">
-            <el-select
-              v-model="createVersionId"
-              filterable
-              :clearable="!isEditing"
-              :loading="versionsLoading"
-              placeholder="选择版本"
-              :disabled="isEditing"
-            >
-              <el-option
-                v-for="v in versions"
-                :key="v.id"
-                :label="`${v.versionNo}${v.name ? ' - ' + v.name : ''}`"
-                :value="String(v.id)"
+        </el-card>
+
+        <el-card shadow="never" class="dialog-section-card">
+          <template #header>
+            <div class="section-card-header">
+              <span class="section-title">
+                <el-icon class="section-title-icon"><Document /></el-icon>
+                需求内容
+              </span>
+              <el-text type="info" size="small">描述与文档二选一</el-text>
+            </div>
+          </template>
+
+          <div class="mode-toggle-wrap">
+            <el-radio-group v-model="requirementInputMode" class="mode-radio-group" size="default">
+              <el-radio-button value="TEXT">手动输入描述</el-radio-button>
+              <el-radio-button value="FILE">上传文档（自动提取正文）</el-radio-button>
+            </el-radio-group>
+          </div>
+
+          <div v-if="requirementInputMode === 'TEXT'" class="mode-block-inner">
+            <el-form-item label="需求描述正文" class="mb-0">
+              <el-input
+                v-model="createContent"
+                type="textarea"
+                :autosize="{ minRows: 7, maxRows: 16 }"
+                placeholder="请输入需求说明、验收要点等"
               />
-            </el-select>
-          </el-form-item>
-        </div>
+            </el-form-item>
+          </div>
 
-        <el-divider content-position="left">选择录入组合</el-divider>
-        <el-checkbox v-model="createModeText">需求描述（文本）</el-checkbox>
-        <el-checkbox v-model="createModeReqDoc">需求文档（附件）</el-checkbox>
-        <el-checkbox v-model="createModePrototype">原型图（图片）</el-checkbox>
+          <div v-else class="mode-block-inner">
+            <el-alert
+              v-if="isEditing && editingFileAsset && !createReqFile"
+              type="info"
+              :closable="false"
+              show-icon
+              class="current-asset-alert"
+            >
+              <template #title>已关联文档</template>
+              <div class="current-file-line">
+                <span class="current-file-name">{{ editingFileAsset.fileName || editingFileAsset.title || '未命名' }}</span>
+                <el-text v-if="editingFileAsset.fileSize" type="info" size="small" class="file-size-tag">
+                  {{ formatBytes(Number(editingFileAsset.fileSize)) }}
+                </el-text>
+              </div>
+              <el-text type="info" size="small">不选新文件则保留当前文档；选择新文件将替换并重新提取正文。</el-text>
+            </el-alert>
 
-        <div v-if="createModeText" class="mode-block">
-          <el-form-item label="标题">
-            <el-input v-model="createTitle" maxlength="120" show-word-limit />
-          </el-form-item>
-          <el-form-item label="需求描述">
-            <el-input v-model="createContent" type="textarea" :rows="8" />
-          </el-form-item>
-        </div>
+            <el-form-item label="需求文档" class="upload-form-item mb-0">
+              <el-upload
+                ref="reqUploadRef"
+                class="asset-upload"
+                :auto-upload="false"
+                :limit="1"
+                :on-change="onReqFileChange"
+                :on-remove="onReqFileRemove"
+                :on-exceed="onReqExceed"
+              >
+                <el-button type="primary" plain>
+                  <el-icon class="btn-icon"><Upload /></el-icon>
+                  {{ isEditing ? '更换文档' : '选择文档' }}
+                </el-button>
+                <template #tip>
+                  <div class="upload-tip">
+                    支持 doc、docx、pdf、txt、md 等；保存后仅保留提取的正文，服务器不长期保留原件。
+                  </div>
+                </template>
+              </el-upload>
+              <div v-if="createReqFile" class="picked-file-chip">
+                <el-tag type="success" effect="plain" size="large">
+                  新选：{{ createReqFile.name }} · {{ formatBytes(createReqFile.size) }}
+                </el-tag>
+              </div>
+            </el-form-item>
 
-        <div v-if="createModeReqDoc" class="mode-block">
-          <el-form-item label="需求文档（doc/docx/pdf/txt/md 等）">
-            <input
-              class="file-input"
-              type="file"
-              @change="(e: Event) => { const f=(e.target as HTMLInputElement).files?.[0]; if (f) onPickReqFile(f) }"
-            />
-            <div v-if="createReqFile" class="file-meta">已选择：{{ createReqFile.name }}（{{ createReqFile.size }} bytes）</div>
-          </el-form-item>
-        </div>
+            <el-form-item
+              v-if="isEditing && createContent.trim()"
+              label="已提取正文（只读）"
+              class="mb-0"
+            >
+              <el-input
+                v-model="createContent"
+                type="textarea"
+                :autosize="{ minRows: 5, maxRows: 12 }"
+                readonly
+                class="readonly-extract"
+              />
+            </el-form-item>
+          </div>
+        </el-card>
 
-        <div v-if="createModePrototype" class="mode-block">
-          <el-form-item label="原型图（png/jpg/webp 等）">
-            <input
-              class="file-input"
-              type="file"
-              accept="image/*"
-              @change="(e: Event) => { const f=(e.target as HTMLInputElement).files?.[0]; if (f) onPickProtoFile(f) }"
-            />
-            <div v-if="createProtoFile" class="file-meta">已选择：{{ createProtoFile.name }}（{{ createProtoFile.size }} bytes）</div>
-          </el-form-item>
-        </div>
+        <el-card shadow="never" class="dialog-section-card">
+          <template #header>
+            <div class="section-card-header section-card-header--switch">
+              <span class="section-title">
+                <el-icon class="section-title-icon"><Picture /></el-icon>
+                原型图
+              </span>
+              <el-switch
+                v-model="createModePrototype"
+                inline-prompt
+                active-text="附带"
+                inactive-text="不附带"
+              />
+            </div>
+          </template>
+          <el-text v-if="!createModePrototype" type="info" size="small" class="proto-off-hint">
+            关闭时不保存原型图；若编辑时关闭，将删除已有原型图资产。
+          </el-text>
+          <div v-else class="mode-block-inner">
+            <el-form-item label="原型图附件" class="upload-form-item mb-0">
+              <el-upload
+                ref="protoUploadRef"
+                class="asset-upload"
+                :auto-upload="false"
+                :limit="1"
+                accept="image/*"
+                :on-change="onProtoFileChange"
+                :on-remove="onProtoFileRemove"
+                :on-exceed="onProtoExceed"
+              >
+                <el-button type="primary" plain>
+                  <el-icon class="btn-icon"><Upload /></el-icon>
+                  {{ isEditing ? '更换图片' : '选择图片' }}
+                </el-button>
+                <template #tip>
+                  <div class="upload-tip">支持 png、jpg、webp 等常见图片格式。</div>
+                </template>
+              </el-upload>
+              <div v-if="createProtoFile" class="picked-file-chip">
+                <el-tag type="success" effect="plain" size="large">
+                  新选：{{ createProtoFile.name }} · {{ formatBytes(createProtoFile.size) }}
+                </el-tag>
+              </div>
+              <el-alert
+                v-if="isEditing && createModePrototype && !createProtoFile"
+                type="info"
+                :closable="false"
+                show-icon
+                class="proto-edit-hint"
+              >
+                未选择新图片则保留当前原型图；若需删除请关闭上方「附带」开关后保存。
+              </el-alert>
+            </el-form-item>
+          </div>
+        </el-card>
       </el-form>
       <template #footer>
-        <el-button @click="createVisible = false">取消</el-button>
-        <el-button type="primary" :loading="creating" @click="submitCreate">{{ createDialogConfirmText }}</el-button>
+        <div class="dialog-footer-bar">
+          <el-button @click="createVisible = false">取消</el-button>
+          <el-button type="primary" :loading="creating" @click="submitCreate">{{ createDialogConfirmText }}</el-button>
+        </div>
       </template>
     </el-dialog>
 
@@ -739,22 +959,151 @@ onMounted(async () => {
 
 .create-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.asset-dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.dialog-section-card {
+  margin-bottom: 14px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+}
+
+.dialog-section-card:last-of-type {
+  margin-bottom: 0;
+}
+
+.dialog-section-card :deep(.el-card__header) {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+.dialog-section-card :deep(.el-card__body) {
+  padding: 16px;
+}
+
+.section-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
-.mode-block {
-  margin-top: 10px;
+.section-card-header--switch {
+  align-items: center;
 }
 
-.file-input {
-  display: block;
+.section-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--el-text-color-primary);
 }
 
-.file-meta {
-  margin-top: 6px;
-  color: #606266;
+.section-title-icon {
+  font-size: 18px;
+  color: var(--el-color-primary);
+}
+
+.mode-toggle-wrap {
+  margin-bottom: 16px;
+}
+
+.mode-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.mode-radio-group :deep(.el-radio-button) {
+  flex: 1;
+  min-width: 0;
+}
+
+.mode-radio-group :deep(.el-radio-button__inner) {
+  width: 100%;
+}
+
+.mode-block-inner {
+  padding-top: 4px;
+}
+
+.current-asset-alert {
+  margin-bottom: 16px;
+}
+
+.current-file-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.current-file-name {
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.file-size-tag {
+  flex-shrink: 0;
+}
+
+.upload-form-item {
+  margin-bottom: 0;
+}
+
+.asset-upload :deep(.el-upload) {
+  width: auto;
+}
+
+.upload-tip {
+  margin-top: 8px;
+  color: var(--el-text-color-secondary);
   font-size: 12px;
+  line-height: 1.55;
+  max-width: 560px;
+}
+
+.picked-file-chip {
+  margin-top: 12px;
+}
+
+.btn-icon {
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.proto-off-hint {
+  display: block;
+  line-height: 1.5;
+}
+
+.proto-edit-hint {
+  margin-top: 12px;
+}
+
+.readonly-extract :deep(textarea) {
+  background: var(--el-fill-color-light);
+}
+
+.dialog-footer-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.asset-dialog-form :deep(.mb-0.el-form-item) {
+  margin-bottom: 0;
 }
 
 .table-area {
@@ -766,5 +1115,24 @@ onMounted(async () => {
   display: flex;
   justify-content: flex-end;
   padding-top: 12px;
+}
+
+/* 新增/编辑“需求资产”弹窗：body 滚动，footer（取消/保存）固定可见 */
+:deep(.assets-create-dialog .el-dialog) {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 40px);
+}
+
+:deep(.assets-create-dialog .el-dialog__body) {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+:deep(.assets-create-dialog .el-dialog__footer) {
+  flex: 0 0 auto;
+  background: #fff;
+  border-top: 1px solid #f0f2f5;
 }
 </style>

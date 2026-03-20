@@ -395,11 +395,14 @@ export const api = {
   createTextAsset(versionId: number, payload: { title: string; content: string; relationCode?: string }) {
     return request<Asset>('POST', `/versions/${versionId}/requirements/text`, payload)
   },
-  async uploadRequirementFile(versionId: number, file: File, relationCode?: string) {
+  async uploadRequirementFile(versionId: number, file: File, relationCode?: string, title?: string) {
     const formData = new FormData()
     formData.append('file', file)
     if (relationCode) {
       formData.append('relationCode', relationCode)
+    }
+    if (title != null && String(title).trim()) {
+      formData.append('title', String(title).trim())
     }
     const response = await http.post<ApiResponse<Asset>>(`/versions/${versionId}/requirements/files`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
