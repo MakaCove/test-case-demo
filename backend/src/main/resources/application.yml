@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: backend
+  datasource:
+    url: jdbc:mysql://localhost:3306/ai_testcase_platform?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: admin123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+
+app:
+  auth:
+    bootstrap-admin-password: admin123
+  storage:
+    base-path: uploads
+  # 调用大模型（OpenAI 兼容）单次 HTTP 响应超时（秒）；生成用例较慢时可加大
+  model:
+    request-timeout-seconds: 300
+
+server:
+  port: 8080
