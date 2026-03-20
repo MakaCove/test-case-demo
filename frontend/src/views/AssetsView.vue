@@ -479,14 +479,31 @@ async function submitCreate() {
       return
     }
   } else {
-    if (!createReqFile.value) {
-      ElMessage.warning('请上传需求文档（系统将提取正文入库）')
-      return
+    // 新建必须选文档；编辑可保留已有 FILE 资产，无需重新上传（由 submitEdit 判断）
+    if (!isEditing.value) {
+      if (!createReqFile.value) {
+        ElMessage.warning('请上传需求文档（系统将提取正文入库）')
+        return
+      }
+    } else {
+      const existingFiles = editingAssets.value.filter((a) => a.assetType === 'FILE')
+      if (!createReqFile.value && existingFiles.length === 0) {
+        ElMessage.warning('请上传需求文档，或切换到「手动输入描述」')
+        return
+      }
     }
   }
   if (createModePrototype.value && !createProtoFile.value) {
-    ElMessage.warning('已勾选附带原型图，请选择图片文件')
-    return
+    // 新建必须选图；编辑可保留已有原型图
+    if (!isEditing.value) {
+      ElMessage.warning('已勾选附带原型图，请选择图片文件')
+      return
+    }
+    const existingProtos = editingAssets.value.filter((a) => a.assetType === 'PROTOTYPE')
+    if (existingProtos.length === 0) {
+      ElMessage.warning('已勾选附带原型图，请选择图片文件')
+      return
+    }
   }
   creating.value = true
   try {
