@@ -726,6 +726,7 @@ onMounted(async () => {
       v-model="createVisible"
       :title="createDialogTitle"
       width="720px"
+      align-center
       :close-on-click-modal="false"
       class="assets-create-dialog"
       destroy-on-close
@@ -863,7 +864,7 @@ onMounted(async () => {
               <el-input
                 v-model="createContent"
                 type="textarea"
-                :autosize="{ minRows: 5, maxRows: 12 }"
+                :rows="8"
                 readonly
                 class="readonly-extract"
               />
@@ -1109,10 +1110,6 @@ onMounted(async () => {
   margin-top: 12px;
 }
 
-.readonly-extract :deep(textarea) {
-  background: var(--el-fill-color-light);
-}
-
 .dialog-footer-bar {
   display: flex;
   justify-content: flex-end;
@@ -1134,22 +1131,58 @@ onMounted(async () => {
   padding-top: 12px;
 }
 
-/* 新增/编辑“需求资产”弹窗：body 滚动，footer（取消/保存）固定可见 */
-:deep(.assets-create-dialog .el-dialog) {
+</style>
+
+<style>
+/*
+ * Element Plus：.el-overlay-dialog 默认 overflow:auto，弹窗高于视口时会在「遮罩层」里滚动，
+ * 看起来像整页在滑、底部按钮被顶出屏外。改为遮罩不滚动，弹窗限高，仅 .el-dialog__body 内部滚动。
+ */
+.el-overlay-dialog:has(.assets-create-dialog) {
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.el-dialog.assets-create-dialog {
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 40px);
+  max-height: calc(100vh - 32px) !important;
+  margin: 0 !important;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
-:deep(.assets-create-dialog .el-dialog__body) {
-  flex: 1;
+.el-dialog.assets-create-dialog .el-dialog__header {
+  flex-shrink: 0;
+}
+
+.el-dialog.assets-create-dialog .el-dialog__body {
+  flex: 1 1 auto;
   min-height: 0;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
-:deep(.assets-create-dialog .el-dialog__footer) {
-  flex: 0 0 auto;
-  background: #fff;
-  border-top: 1px solid #f0f2f5;
+.el-dialog.assets-create-dialog .el-dialog__footer {
+  flex-shrink: 0;
+  background: var(--el-bg-color);
+  border-top: 1px solid var(--el-border-color-lighter);
+}
+
+/* 已提取正文：限制高度，长文在本框内滚动（弹窗 teleport 后 scoped 选不中，故写在此） */
+.el-dialog.assets-create-dialog .readonly-extract textarea {
+  max-height: min(45vh, 420px) !important;
+  overflow-y: auto !important;
+  background: var(--el-fill-color-light);
+}
+
+/* 手动描述正文：autosize 过长时在本框内滚动，避免撑高弹窗 */
+.el-dialog.assets-create-dialog .el-dialog__body textarea {
+  max-height: min(52vh, 560px);
 }
 </style>
