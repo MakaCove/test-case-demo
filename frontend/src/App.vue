@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DataBoard, Document, Fold, Folder, Management, Expand, UserFilled, Files, Cpu, Tickets, Setting, EditPen, Download } from '@element-plus/icons-vue'
+import { DataBoard, Document, Fold, Folder, Management, Expand, UserFilled, Files, Cpu, Tickets, Setting, EditPen, Download, Memo, List, Histogram } from '@element-plus/icons-vue'
 import { computed, provide, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
@@ -75,7 +75,23 @@ async function onLogout() {
         </el-menu-item>
         <el-menu-item index="/generation-tasks">
           <el-icon><Cpu /></el-icon>
-          <template #title>任务中心</template>
+          <template #title>用例任务中心</template>
+        </el-menu-item>
+        <el-menu-item index="/ui-nl-cases">
+          <el-icon><Memo /></el-icon>
+          <template #title>自然语言用例库</template>
+        </el-menu-item>
+        <el-menu-item index="/ui-nl-tasks">
+          <el-icon><Cpu /></el-icon>
+          <template #title>UI自然语言任务中心</template>
+        </el-menu-item>
+        <el-menu-item index="/ui-nl-steps">
+          <el-icon><List /></el-icon>
+          <template #title>UI步骤管理</template>
+        </el-menu-item>
+        <el-menu-item index="/ui-nl-reports">
+          <el-icon><Histogram /></el-icon>
+          <template #title>UI测试报告</template>
         </el-menu-item>
         <el-menu-item index="/test-cases">
           <el-icon><Tickets /></el-icon>
@@ -167,8 +183,10 @@ async function onLogout() {
 
 <style scoped>
 .app-layout {
-  min-height: 100vh;
+  height: 100vh;
+  min-height: 0;
   background: #f3f6fb;
+  overflow: hidden;
 }
 
 .app-aside {
@@ -207,10 +225,37 @@ async function onLogout() {
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-gutter: stable;
+  /* Firefox: 默认几乎不可见，hover 才可见 */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
 }
 
 .side-menu:not(.el-menu--collapse) {
   width: 220px;
+}
+
+/* 侧边菜单滚动条美化（WebKit） */
+.side-menu::-webkit-scrollbar {
+  width: 8px;
+}
+.side-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+.side-menu::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.side-menu:hover {
+  scrollbar-color: rgba(17, 24, 39, 0.28) transparent;
+}
+.side-menu:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(17, 24, 39, 0.28);
+}
+.side-menu::-webkit-scrollbar-thumb:active {
+  background-color: rgba(17, 24, 39, 0.38);
 }
 
 .side-menu :deep(.el-menu-item .el-icon) {
@@ -225,6 +270,11 @@ async function onLogout() {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.app-main {
+  min-height: 0;
+  overflow: auto;
 }
 
 .header-left {

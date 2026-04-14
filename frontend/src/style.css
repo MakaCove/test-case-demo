@@ -13,3 +13,40 @@ body {
   width: 100%;
   min-height: 100vh;
 }
+
+/* 通用：对话框 footer 固定，body 区域滚动（用于 Teleport 到 body 的 el-dialog） */
+.el-overlay-dialog:has(.fixed-footer-dialog) {
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.el-dialog.fixed-footer-dialog {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 32px) !important;
+  margin: 0 !important;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.el-dialog.fixed-footer-dialog .el-dialog__header {
+  flex-shrink: 0;
+}
+
+.el-dialog.fixed-footer-dialog .el-dialog__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.el-dialog.fixed-footer-dialog .el-dialog__footer {
+  flex-shrink: 0;
+  background: var(--el-bg-color);
+  border-top: 1px solid var(--el-border-color-lighter);
+}

@@ -86,6 +86,86 @@ export type GenerationTask = {
   requirementAssets?: Array<{ assetCode: string; title?: string | null; assetType?: string | null }>
 }
 
+export type UiNlCase = {
+  id: number
+  caseNo: string
+  projectId: number
+  versionId: number
+  title: string
+  nlText: string
+  precondition?: string
+  targetEnv?: string
+  baseUrl?: string
+  credentialRef?: string
+  status: string
+  tagsJson?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+export type UiNlTask = {
+  id: number
+  projectId: number
+  versionId: number
+  uiNlCaseId: number
+  taskNo: string
+  status: string
+  submittedBy: number
+  submittedAt?: string
+  startedAt?: string
+  finishedAt?: string
+  runnerRunId?: string
+  modelConfigId?: number
+  promptTemplateId?: number
+  headless?: boolean
+  browserName?: string
+  modelKey?: string
+  timeoutSeconds?: number
+  payloadJson?: string
+  resultSummary?: string
+  interruptReason?: string
+  errorMessage?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+export type UiNlStep = {
+  id: number
+  taskId: number
+  stepNo: number
+  stepTitle?: string
+  actionType: string
+  targetJson?: string
+  inputValue?: string
+  expectJson?: string
+  status: string
+  durationMs?: number
+  errorMessage?: string
+  screenshotPath?: string
+  startedAt?: string
+  finishedAt?: string
+  rawLog?: string
+}
+
+export type UiNlReport = {
+  id: number
+  reportNo: string
+  taskId: number
+  projectId: number
+  versionId: number
+  status: string
+  totalSteps: number
+  passedSteps: number
+  failedSteps: number
+  summary?: string
+  reportJson?: string
+  artifactsJson?: string
+  startedAt?: string
+  finishedAt?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
 export type TestCase = {
   id: number
   caseNo: string
@@ -818,5 +898,146 @@ export const api = {
   async downloadExport(exportId: number) {
     const response = await http.get(`/exports/${exportId}/download`, { responseType: 'blob' })
     return response.data as Blob
+  },
+
+  createUiNlCase(payload: {
+    projectId: number
+    versionId: number
+    title: string
+    nlText: string
+    precondition?: string
+    targetEnv?: string
+    baseUrl?: string
+    credentialRef?: string
+    status?: string
+    tagsJson?: string
+  }) {
+    return request<UiNlCase>('POST', '/ui-nl-cases', payload)
+  },
+  getUiNlCases(params?: {
+    pageNo?: number
+    pageSize?: number
+    projectId?: number
+    versionId?: number
+    keyword?: string
+    status?: string
+  }) {
+    const q = new URLSearchParams({
+      pageNo: String(params?.pageNo ?? 1),
+      pageSize: String(params?.pageSize ?? 20),
+      keyword: params?.keyword ?? '',
+    })
+    if (params?.projectId) q.set('projectId', String(params.projectId))
+    if (params?.versionId) q.set('versionId', String(params.versionId))
+    if (params?.status) q.set('status', String(params.status))
+    return request<PagedResult<UiNlCase>>('GET', `/ui-nl-cases?${q.toString()}`)
+  },
+  getUiNlCase(id: number) {
+    return request<UiNlCase>('GET', `/ui-nl-cases/${id}`)
+  },
+  updateUiNlCase(
+    id: number,
+    payload: {
+      title: string
+      nlText: string
+      precondition?: string
+      targetEnv?: string
+      baseUrl?: string
+      credentialRef?: string
+      status?: string
+      tagsJson?: string
+    },
+  ) {
+    return request<UiNlCase>('PUT', `/ui-nl-cases/${id}`, payload)
+  },
+  deleteUiNlCase(id: number) {
+    return request<null>('DELETE', `/ui-nl-cases/${id}`)
+  },
+  createUiNlTask(payload: {
+    projectId: number
+    versionId: number
+    uiNlCaseId: number
+    modelConfigId: number
+    promptTemplateId: number
+    headless?: boolean
+    browserName?: string
+    modelKey?: string
+    timeoutSeconds?: number
+    payloadJson?: string
+  }) {
+    return request<UiNlTask>('POST', '/ui-nl-tasks', payload)
+  },
+  getUiNlTasks(params?: {
+    pageNo?: number
+    pageSize?: number
+    projectId?: number
+    versionId?: number
+    status?: string
+    caseTitle?: string
+  }) {
+    const q = new URLSearchParams({
+      pageNo: String(params?.pageNo ?? 1),
+      pageSize: String(params?.pageSize ?? 20),
+      status: params?.status ?? '',
+    })
+    if (params?.projectId) q.set('projectId', String(params.projectId))
+    if (params?.versionId) q.set('versionId', String(params.versionId))
+    if (params?.caseTitle) q.set('caseTitle', String(params.caseTitle))
+    return request<PagedResult<UiNlTask>>('GET', `/ui-nl-tasks?${q.toString()}`)
+  },
+  getUiNlTask(id: number) {
+    return request<UiNlTask>('GET', `/ui-nl-tasks/${id}`)
+  },
+  updateUiNlTask(
+    id: number,
+    payload: {
+      uiNlCaseId: number
+      modelConfigId: number
+      promptTemplateId: number
+      headless?: boolean
+      browserName?: string
+      modelKey?: string
+      timeoutSeconds?: number
+      payloadJson?: string
+    },
+  ) {
+    return request<UiNlTask>('PUT', `/ui-nl-tasks/${id}`, payload)
+  },
+  deleteUiNlTask(id: number) {
+    return request<null>('DELETE', `/ui-nl-tasks/${id}`)
+  },
+  executeUiNlTask(id: number) {
+    return request<UiNlTask>('POST', `/ui-nl-tasks/${id}/execute`)
+  },
+  interruptUiNlTask(id: number, reason?: string) {
+    return request<UiNlTask>('POST', `/ui-nl-tasks/${id}/interrupt`, { reason })
+  },
+  runUiNlTask(id: number) {
+    return request<UiNlTask>('POST', `/ui-nl-tasks/${id}/run`)
+  },
+  getUiNlTaskSteps(taskId: number) {
+    return request<UiNlStep[]>('GET', `/ui-nl-tasks/${taskId}/steps`)
+  },
+  getUiNlStep(stepId: number) {
+    return request<UiNlStep>('GET', `/ui-nl-steps/${stepId}`)
+  },
+  getUiNlReports(params?: {
+    pageNo?: number
+    pageSize?: number
+    projectId?: number
+    versionId?: number
+    status?: string
+  }) {
+    const q = new URLSearchParams({
+      pageNo: String(params?.pageNo ?? 1),
+      pageSize: String(params?.pageSize ?? 20),
+      status: params?.status ?? '',
+    })
+    if (params?.projectId) q.set('projectId', String(params.projectId))
+    if (params?.versionId) q.set('versionId', String(params.versionId))
+    return request<PagedResult<UiNlReport>>('GET', `/ui-nl-reports?${q.toString()}`)
+  },
+  getUiNlReport(id: number) {
+    return request<UiNlReport>('GET', `/ui-nl-reports/${id}`)
   },
 }

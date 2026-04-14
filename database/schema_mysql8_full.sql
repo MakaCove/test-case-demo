@@ -14,6 +14,10 @@ DROP TABLE IF EXISTS test_cases;
 DROP TABLE IF EXISTS api_test_cases;
 DROP TABLE IF EXISTS generation_task_refs;
 DROP TABLE IF EXISTS generation_tasks;
+DROP TABLE IF EXISTS ui_nl_reports;
+DROP TABLE IF EXISTS ui_nl_task_steps;
+DROP TABLE IF EXISTS ui_nl_tasks;
+DROP TABLE IF EXISTS ui_nl_cases;
 DROP TABLE IF EXISTS export_records;
 DROP TABLE IF EXISTS operation_logs;
 DROP TABLE IF EXISTS requirement_assets;
@@ -207,6 +211,130 @@ CREATE TABLE generation_task_refs (
   UNIQUE KEY uk_task_ref (task_id, ref_version_id),
   KEY idx_task_ref_version (ref_version_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='生成任务参考版本关联';
+
+-- -----------------------------------------------------------------------------
+-- UI 自然语言用例库
+-- -----------------------------------------------------------------------------
+CREATE TABLE ui_nl_cases (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  case_no VARCHAR(64) NOT NULL COMMENT '自然语言用例编号，唯一',
+  project_id BIGINT NOT NULL COMMENT '项目 ID',
+  version_id BIGINT NOT NULL COMMENT '版本 ID',
+  title VARCHAR(255) NOT NULL COMMENT '用例标题',
+  nl_text LONGTEXT NOT NULL COMMENT '自然语言描述正文',
+  precondition TEXT COMMENT '前置条件',
+  target_env VARCHAR(64) DEFAULT NULL COMMENT '目标环境标识，如 SIT/UAT',
+  base_url VARCHAR(255) DEFAULT NULL COMMENT '目标系统入口地址',
+  credential_ref VARCHAR(128) DEFAULT NULL COMMENT '凭据引用（禁止明文密码）',
+  status VARCHAR(16) NOT NULL DEFAULT 'ENABLED' COMMENT '状态：ENABLED/DISABLED',
+  tags_json JSON DEFAULT NULL COMMENT '标签/扩展属性',
+  created_by BIGINT NOT NULL COMMENT '创建人用户 ID',
+  updated_by BIGINT NOT NULL COMMENT '最后更新人用户 ID',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  is_deleted TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除：0 否 1 是',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_ui_nl_cases_case_no (case_no),
+  KEY idx_ui_nl_cases_project_version (project_id, version_id),
+  KEY idx_ui_nl_cases_status (status),
+  KEY idx_ui_nl_cases_title (title(128))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='UI 自然语言用例库';
+
+-- -----------------------------------------------------------------------------
+-- UI 自然语言任务
+-- -----------------------------------------------------------------------------
+CREATE TABLE ui_nl_tasks (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  project_id BIGINT NOT NULL COMMENT '项目 ID',
+  version_id BIGINT NOT NULL COMMENT '版本 ID',
+  ui_nl_case_id BIGINT NOT NULL COMMENT '关联自然语言用例 ID',
+  task_no VARCHAR(64) NOT NULL COMMENT '任务编号，唯一',
+  status VARCHAR(16) NOT NULL COMMENT '状态：PENDING/QUEUED/PLANNING/READY/RUNNING/COMPLETED/FAILED/CANCELLED',
+  submitted_by BIGINT NOT NULL COMMENT '提交人用户 ID',
+  submitted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '提交时间',
+  started_at DATETIME DEFAULT NULL COMMENT '开始执行时间',
+  finished_at DATETIME DEFAULT NULL COMMENT '结束时间',
+  runner_run_id VARCHAR(64) DEFAULT NULL COMMENT 'runner 侧执行 ID',
+  model_config_id BIGINT NOT NULL COMMENT '模型配置 ID（来自模型配置管理）',
+  prompt_template_id BIGINT NOT NULL COMMENT 'Prompt 模板 ID（来自提示词管理）',
+  headless TINYINT NOT NULL DEFAULT 0 COMMENT '是否无头模式：0 否 1 是',
+  browser_name VARCHAR(32) NOT NULL DEFAULT 'chromium' COMMENT '浏览器类型',
+  model_key VARCHAR(128) DEFAULT NULL COMMENT '规划步骤使用模型标识',
+  timeout_seconds INT NOT NULL DEFAULT 600 COMMENT '执行超时时间（秒）',
+  payload_json JSON DEFAULT NULL COMMENT '任务参数快照',
+  result_summary JSON DEFAULT NULL COMMENT '执行结果摘要',
+  interrupt_by BIGINT DEFAULT NULL COMMENT '中断操作人 ID',
+  interrupt_reason VARCHAR(255) DEFAULT NULL COMMENT '中断原因',
+  error_message TEXT COMMENT '错误信息',
+  created_by BIGINT NOT NULL COMMENT '创建人用户 ID',
+  updated_by BIGINT NOT NULL COMMENT '最后更新人用户 ID',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  is_deleted TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除：0 否 1 是',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_ui_nl_tasks_task_no (task_no),
+  UNIQUE KEY uk_ui_nl_tasks_runner_run_id (runner_run_id),
+  KEY idx_ui_nl_tasks_status_submitted (status, submitted_at),
+  KEY idx_ui_nl_tasks_project_version (project_id, version_id),
+  KEY idx_ui_nl_tasks_case (ui_nl_case_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='UI 自然语言任务';
+
+-- -----------------------------------------------------------------------------
+-- UI 自然语言任务步骤
+-- -----------------------------------------------------------------------------
+CREATE TABLE ui_nl_task_steps (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  task_id BIGINT NOT NULL COMMENT '任务 ID',
+  step_no INT NOT NULL COMMENT '步骤序号，从 1 开始',
+  step_title VARCHAR(255) DEFAULT NULL COMMENT '步骤标题',
+  action_type VARCHAR(32) NOT NULL COMMENT '动作类型：CLICK/TYPE/WAIT/ASSERT 等',
+  target_json JSON DEFAULT NULL COMMENT '元素定位信息（selector/text/role 等）',
+  input_value TEXT COMMENT '输入值',
+  expect_json JSON DEFAULT NULL COMMENT '断言信息',
+  status VARCHAR(16) NOT NULL DEFAULT 'PENDING' COMMENT '状态：PENDING/SUCCESS/FAILED/SKIPPED',
+  duration_ms BIGINT DEFAULT NULL COMMENT '步骤耗时（毫秒）',
+  error_message TEXT COMMENT '步骤错误信息',
+  screenshot_path VARCHAR(500) DEFAULT NULL COMMENT '截图路径',
+  started_at DATETIME DEFAULT NULL COMMENT '步骤开始时间',
+  finished_at DATETIME DEFAULT NULL COMMENT '步骤结束时间',
+  raw_log TEXT COMMENT '步骤原始日志',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  is_deleted TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除：0 否 1 是',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_ui_nl_task_step_no (task_id, step_no),
+  KEY idx_ui_nl_task_steps_task (task_id),
+  KEY idx_ui_nl_task_steps_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='UI 自然语言任务步骤';
+
+-- -----------------------------------------------------------------------------
+-- UI 自然语言测试报告
+-- -----------------------------------------------------------------------------
+CREATE TABLE ui_nl_reports (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  report_no VARCHAR(64) NOT NULL COMMENT '报告编号，唯一',
+  task_id BIGINT NOT NULL COMMENT '任务 ID',
+  project_id BIGINT NOT NULL COMMENT '项目 ID',
+  version_id BIGINT NOT NULL COMMENT '版本 ID',
+  status VARCHAR(16) NOT NULL COMMENT '报告状态：SUCCESS/FAILED/CANCELLED',
+  total_steps INT NOT NULL DEFAULT 0 COMMENT '总步骤数',
+  passed_steps INT NOT NULL DEFAULT 0 COMMENT '成功步骤数',
+  failed_steps INT NOT NULL DEFAULT 0 COMMENT '失败步骤数',
+  summary TEXT COMMENT '文本摘要',
+  report_json JSON DEFAULT NULL COMMENT '报告详情 JSON',
+  artifacts_json JSON DEFAULT NULL COMMENT '附件索引 JSON（截图/trace/video）',
+  started_at DATETIME DEFAULT NULL COMMENT '执行开始时间',
+  finished_at DATETIME DEFAULT NULL COMMENT '执行结束时间',
+  created_by BIGINT NOT NULL COMMENT '创建人用户 ID',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  is_deleted TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除：0 否 1 是',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_ui_nl_reports_report_no (report_no),
+  UNIQUE KEY uk_ui_nl_reports_task (task_id),
+  KEY idx_ui_nl_reports_project_version_time (project_id, version_id, created_at),
+  KEY idx_ui_nl_reports_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='UI 自然语言测试报告';
 
 -- -----------------------------------------------------------------------------
 -- 功能测试用例

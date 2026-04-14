@@ -107,6 +107,45 @@
 
 ---
 
+## UI 自然语言用例库 `/ui-nl-cases`
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/ui-nl-cases` | 创建自然语言用例 |
+| GET | `/ui-nl-cases` | 分页列表（`projectId`、`versionId`、`keyword`） |
+| GET | `/ui-nl-cases/{id}` | 详情 |
+| PUT | `/ui-nl-cases/{id}` | 更新 |
+| DELETE | `/ui-nl-cases/{id}` | 删除（逻辑删除） |
+
+---
+
+## UI 自然语言任务中心 `/ui-nl-tasks`
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/ui-nl-tasks` | 创建任务（绑定自然语言用例） |
+| GET | `/ui-nl-tasks` | 分页列表（`projectId`、`versionId`、`status`） |
+| GET | `/ui-nl-tasks/{id}` | 任务详情 |
+| POST | `/ui-nl-tasks/{id}/start` | 启动（`PENDING/FAILED/CANCELLED -> QUEUED`） |
+| POST | `/ui-nl-tasks/{id}/execute` | 执行（调用 runner） |
+| POST | `/ui-nl-tasks/{id}/cancel` | 取消 |
+| POST | `/ui-nl-tasks/{id}/retry` | 重试（重置为 `PENDING`） |
+| GET | `/ui-nl-tasks/{id}/steps` | 获取任务步骤列表 |
+
+任务状态建议：`PENDING/QUEUED/PLANNING/READY/RUNNING/COMPLETED/FAILED/CANCELLED`。
+
+---
+
+## UI 步骤与报告
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/ui-nl-steps/{stepId}` | 步骤详情 |
+| GET | `/ui-nl-reports` | 报告分页列表（`projectId`、`versionId`、`status`） |
+| GET | `/ui-nl-reports/{id}` | 报告详情 |
+
+---
+
 ## 功能测试用例 `/test-cases`
 
 | 方法 | 路径 | 说明 |

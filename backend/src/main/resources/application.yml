@@ -21,6 +21,11 @@ app:
   # 调用大模型（OpenAI 兼容）单次 HTTP 响应超时（秒）；生成用例较慢时可加大
   model:
     request-timeout-seconds: 300
+  ui-runner:
+    base-url: http://127.0.0.1:18081
+    token: abc123
+    connect-timeout-seconds: 5
+    read-timeout-seconds: 30
 
 server:
   port: 8080

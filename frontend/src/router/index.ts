@@ -14,6 +14,11 @@ import ApiTestCaseDetailView from '../views/ApiTestCaseDetailView.vue'
 import ModelConfigsView from '../views/ModelConfigsView.vue'
 import PromptTemplatesView from '../views/PromptTemplatesView.vue'
 import ExportCenterView from '../views/ExportCenterView.vue'
+import UiNlCasesView from '../views/UiNlCasesView.vue'
+import UiNlTasksView from '../views/UiNlTasksView.vue'
+import UiNlStepsView from '../views/UiNlStepsView.vue'
+import UiNlTaskStepsDetailView from '../views/UiNlTaskStepsDetailView.vue'
+import UiNlReportsView from '../views/UiNlReportsView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -25,7 +30,12 @@ const router = createRouter({
     { path: '/versions', component: VersionsView, meta: { requiresAuth: true, title: '版本管理' } },
     { path: '/assets', component: AssetsView, meta: { requiresAuth: true, title: '需求资产' } },
     { path: '/assets/detail', component: AssetDetailView, meta: { requiresAuth: true, title: '资产详情' } },
-    { path: '/generation-tasks', component: GenerationTasksView, meta: { requiresAuth: true, title: '任务中心' } },
+    { path: '/generation-tasks', component: GenerationTasksView, meta: { requiresAuth: true, title: '用例任务中心' } },
+    { path: '/ui-nl-cases', component: UiNlCasesView, meta: { requiresAuth: true, title: '自然语言用例库' } },
+    { path: '/ui-nl-tasks', component: UiNlTasksView, meta: { requiresAuth: true, title: 'UI自然语言任务中心' } },
+    { path: '/ui-nl-steps', component: UiNlStepsView, meta: { requiresAuth: true, title: 'UI步骤管理' } },
+    { path: '/ui-nl-steps/detail', component: UiNlTaskStepsDetailView, meta: { requiresAuth: true, title: '任务步骤详情' } },
+    { path: '/ui-nl-reports', component: UiNlReportsView, meta: { requiresAuth: true, title: 'UI测试报告' } },
     { path: '/test-cases', component: TestCasesView, meta: { requiresAuth: true, title: '功能测试用例' } },
     { path: '/test-cases/detail', component: TestCaseDetailView, meta: { requiresAuth: true, title: '功能用例详情' } },
     { path: '/api-test-cases', component: ApiTestCasesView, meta: { requiresAuth: true, title: '接口测试用例' } },
