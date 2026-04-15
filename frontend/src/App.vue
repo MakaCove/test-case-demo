@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { DataBoard, Document, Fold, Folder, Management, Expand, UserFilled, Files, Cpu, Tickets, Setting, EditPen, Download, Memo, List, Histogram } from '@element-plus/icons-vue'
-import { computed, provide, ref } from 'vue'
+import { computed, onBeforeUnmount, provide, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
 import { api } from './api/api'
@@ -8,6 +8,8 @@ import { api } from './api/api'
 const route = useRoute()
 const router = useRouter()
 const collapsed = ref(false)
+const sideMenuIsScrolling = ref(false)
+let sideMenuScrollTimer: ReturnType<typeof setTimeout> | null = null
 const tableDensity = ref<'default' | 'small'>('default')
 provide('tableDensity', tableDensity)
 
@@ -46,6 +48,24 @@ async function onLogout() {
     await router.replace('/login')
   }
 }
+
+function onSideMenuScroll() {
+  sideMenuIsScrolling.value = true
+  if (sideMenuScrollTimer) {
+    clearTimeout(sideMenuScrollTimer)
+  }
+  sideMenuScrollTimer = setTimeout(() => {
+    sideMenuIsScrolling.value = false
+    sideMenuScrollTimer = null
+  }, 700)
+}
+
+onBeforeUnmount(() => {
+  if (sideMenuScrollTimer) {
+    clearTimeout(sideMenuScrollTimer)
+    sideMenuScrollTimer = null
+  }
+})
 </script>
 
 <template>
@@ -56,7 +76,7 @@ async function onLogout() {
         <p v-if="!collapsed">Test Case Studio</p>
         <h1 v-else class="brand-icon">AI</h1>
       </div>
-      <div class="side-menu-scroll-host">
+      <div class="side-menu-scroll-host" :class="{ 'is-scrolling': sideMenuIsScrolling }" @scroll.passive="onSideMenuScroll">
         <el-menu router :default-active="$route.path" class="side-menu" :collapse="collapsed">
           <el-menu-item index="/dashboard">
             <el-icon><DataBoard /></el-icon>
@@ -230,16 +250,32 @@ async function onLogout() {
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-color: rgba(17, 24, 39, 0.28) transparent;
-  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  scrollbar-width: none;
 }
 
 .side-menu-scroll-host::-webkit-scrollbar {
-  width: 8px;
+  width: 0;
 }
 
 .side-menu-scroll-host::-webkit-scrollbar-thumb {
   border-radius: 8px;
+  background-color: transparent;
+}
+
+.side-menu-scroll-host:hover,
+.side-menu-scroll-host.is-scrolling {
+  scrollbar-color: rgba(17, 24, 39, 0.28) transparent;
+  scrollbar-width: thin;
+}
+
+.side-menu-scroll-host:hover::-webkit-scrollbar,
+.side-menu-scroll-host.is-scrolling::-webkit-scrollbar {
+  width: 8px;
+}
+
+.side-menu-scroll-host:hover::-webkit-scrollbar-thumb,
+.side-menu-scroll-host.is-scrolling::-webkit-scrollbar-thumb {
   background-color: rgba(17, 24, 39, 0.28);
 }
 
