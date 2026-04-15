@@ -6,7 +6,8 @@ import {
   ACTION_LABELS,
   OBJECT_TYPE_LABELS,
   actionLabel,
-  operationObjectDisplay,
+  objectTypeLabel,
+  operationObjectResolvedName,
   type OperationLogRow,
 } from '../utils/operationLogDisplay'
 import { formatDateTime } from '../utils/formatDateTime'
@@ -85,17 +86,23 @@ onMounted(loadLogs)
       <div class="table-body">
         <el-table :data="logs" :size="tableDensity" v-loading="loading" border stripe height="100%">
           <el-table-column prop="id" label="ID" width="80" />
-          <el-table-column label="操作对象" min-width="280">
+          <el-table-column label="对象类型" width="140" show-overflow-tooltip>
             <template #default="{ row }">
               <el-tooltip placement="top" :show-after="400">
                 <template #content>
-                  <div>类型 {{ row.objectType }}</div>
-                  <div v-if="row.objectId != null">ID {{ row.objectId }}</div>
-                  <div v-if="row.remark">备注 {{ row.remark }}</div>
+                  <div>代码 {{ row.objectType }}</div>
                 </template>
-                <span class="op-object-text">{{ operationObjectDisplay(row) }}</span>
+                <span>{{ objectTypeLabel(row.objectType) }}</span>
               </el-tooltip>
             </template>
+          </el-table-column>
+          <el-table-column label="名称 / 标识" min-width="200" show-overflow-tooltip>
+            <template #default="{ row }">
+              {{ operationObjectResolvedName(row) || '—' }}
+            </template>
+          </el-table-column>
+          <el-table-column label="对象 ID" width="100" align="right">
+            <template #default="{ row }">{{ row.objectId != null ? row.objectId : '—' }}</template>
           </el-table-column>
           <el-table-column prop="action" label="操作" width="160">
             <template #default="{ row }">
@@ -196,9 +203,5 @@ onMounted(loadLogs)
 .table-header span {
   color: #909399;
   font-size: 13px;
-}
-
-.op-object-text {
-  cursor: default;
 }
 </style>

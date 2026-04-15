@@ -26,9 +26,6 @@ public class UiNlTaskStepEntity {
     @TableField("action_type")
     private String actionType;
 
-    @TableField("target_json")
-    private String targetJson;
-
     @TableField("input_value")
     private String inputValue;
 
@@ -36,24 +33,6 @@ public class UiNlTaskStepEntity {
     private String expectJson;
 
     private String status;
-
-    @TableField("duration_ms")
-    private Long durationMs;
-
-    @TableField("error_message")
-    private String errorMessage;
-
-    @TableField("screenshot_path")
-    private String screenshotPath;
-
-    @TableField("started_at")
-    private LocalDateTime startedAt;
-
-    @TableField("finished_at")
-    private LocalDateTime finishedAt;
-
-    @TableField("raw_log")
-    private String rawLog;
 
     @TableField("created_at")
     private LocalDateTime createdAt;

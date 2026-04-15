@@ -39,11 +39,14 @@ public class UiNlReportEntity {
 
     private String summary;
 
-    @TableField("report_json")
-    private String reportJson;
-
     @TableField("artifacts_json")
     private String artifactsJson;
+
+    @TableField("report_file_path")
+    private String reportFilePath;
+
+    @TableField("report_generated_at")
+    private LocalDateTime reportGeneratedAt;
 
     @TableField("started_at")
     private LocalDateTime startedAt;

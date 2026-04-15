@@ -8,6 +8,7 @@ import {
   FolderOpened,
   Histogram,
   Link,
+  Memo,
   RefreshRight,
   Timer,
   TrendCharts,
@@ -17,6 +18,12 @@ import { ElMessage } from 'element-plus'
 import { api, type ExportRecord, type GenerationTask, type Project, type Version } from '../api/api'
 import { actionLabel, operationObjectDisplay, type OperationLogRow } from '../utils/operationLogDisplay'
 import { formatDateTime } from '../utils/formatDateTime'
+import {
+  EXPORT_STATUS,
+  GENERATION_TASK_STATUS,
+  statusLabel as dictStatusLabel,
+  statusTagType as dictStatusTagType,
+} from '../utils/statusDictionary'
 
 const router = useRouter()
 
@@ -28,6 +35,8 @@ const versionTotal = ref(0)
 const assetTotal = ref(0)
 const testCaseTotal = ref(0)
 const apiCaseTotal = ref(0)
+const uiNlCaseTotal = ref(0)
+const uiNlTaskTotal = ref(0)
 
 const pendingReviewFn = ref(0)
 const pendingReviewApi = ref(0)
@@ -71,26 +80,11 @@ function caseCategoryTagType(caseCategory: string | undefined) {
 }
 
 function taskStatusTagType(s: string) {
-  const u = (s || '').toUpperCase()
-  if (u === 'QUEUED') return 'info'
-  if (u === 'PENDING') return 'info'
-  if (u === 'RUNNING') return 'warning'
-  if (u === 'COMPLETED') return 'success'
-  if (u === 'FAILED') return 'danger'
-  return 'info'
+  return dictStatusTagType(GENERATION_TASK_STATUS, s, 'info')
 }
 
 function taskStatusLabel(s: string) {
-  const u = (s || '').toUpperCase()
-  const map: Record<string, string> = {
-    QUEUED: '排队',
-    PENDING: '待启动',
-    RUNNING: '运行中',
-    COMPLETED: '已完成',
-    FAILED: '失败',
-    CANCELLED: '已取消',
-  }
-  return map[u] || s || '—'
+  return dictStatusLabel(GENERATION_TASK_STATUS, s, '—')
 }
 
 function taskRequirementAssetsTooltip(row: GenerationTask): string {
@@ -120,22 +114,11 @@ function taskRequirementAssetsSummary(row: GenerationTask): string {
 }
 
 function exportStatusLabel(s: string | undefined) {
-  const u = (s || '').toUpperCase()
-  const map: Record<string, string> = {
-    QUEUED: '排队',
-    RUNNING: '导出中',
-    SUCCESS: '成功',
-    FAILED: '失败',
-  }
-  return map[u] || s || '—'
+  return dictStatusLabel(EXPORT_STATUS, s, '—')
 }
 
 function exportStatusType(s: string | undefined) {
-  const u = (s || '').toUpperCase()
-  if (u === 'SUCCESS') return 'success'
-  if (u === 'FAILED') return 'danger'
-  if (u === 'RUNNING') return 'warning'
-  return 'info'
+  return dictStatusTagType(EXPORT_STATUS, s, 'info')
 }
 
 function mergeRecentTasks(queued: GenerationTask[], running: GenerationTask[]) {
@@ -187,6 +170,8 @@ async function loadOverview() {
       assets,
       tc,
       apiTc,
+      uiCases,
+      uiTasks,
       prFn,
       prApi,
       neFn,
@@ -201,6 +186,8 @@ async function loadOverview() {
       api.getAllAssets({ pageNo: 1, pageSize: 1 }),
       api.getTestCases({ pageNo: 1, pageSize: 1 }),
       api.getApiTestCases({ pageNo: 1, pageSize: 1 }),
+      api.getUiNlCases({ pageNo: 1, pageSize: 1 }),
+      api.getUiNlTasks({ pageNo: 1, pageSize: 1 }),
       api.getTestCases({ pageNo: 1, pageSize: 1, reviewStatus: 'PENDING' }),
       api.getApiTestCases({ pageNo: 1, pageSize: 1, reviewStatus: 'PENDING' }),
       api.getTestCases({ pageNo: 1, pageSize: 1, executionStatus: 'NOT_EXECUTED' }),
@@ -215,6 +202,8 @@ async function loadOverview() {
     assetTotal.value = assets.total
     testCaseTotal.value = tc.total
     apiCaseTotal.value = apiTc.total
+    uiNlCaseTotal.value = uiCases.total
+    uiNlTaskTotal.value = uiTasks.total
     pendingReviewFn.value = prFn.total
     pendingReviewApi.value = prApi.total
     notExecutedFn.value = neFn.total
@@ -328,6 +317,24 @@ const primaryCards = computed(() => [
     icon: Link,
     accent: 'var(--el-color-warning)',
   },
+  {
+    key: 'uiNlCases',
+    label: 'UI自然语言用例',
+    hint: 'UI自然语言用例库',
+    value: uiNlCaseTotal.value,
+    path: '/ui-nl-cases',
+    icon: Memo,
+    accent: '#0ea5e9',
+  },
+  {
+    key: 'uiNlTasks',
+    label: 'UI自然语言任务',
+    hint: 'UI自然语言任务中心',
+    value: uiNlTaskTotal.value,
+    path: '/ui-nl-tasks',
+    icon: Cpu,
+    accent: '#0891b2',
+  },
 ])
 
 const workQueueSummary = computed(() => {
@@ -367,7 +374,7 @@ onUnmounted(() => {
       <div class="dash-header-text">
         <h1 class="dash-title">工作台</h1>
         <p class="dash-desc">
-          汇总项目、版本、资产与用例规模，跟踪生成任务与导出动态；点击数据卡片可跳转到对应模块。
+          汇总项目、版本、资产、用例与 UI 自然语言场景规模，跟踪生成任务与导出动态；点击数据卡片可跳转到对应模块。
         </p>
         <p v-if="lastRefreshAt" class="dash-updated">数据刷新于 {{ lastRefreshAt }}</p>
       </div>

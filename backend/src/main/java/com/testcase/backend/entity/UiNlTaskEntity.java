@@ -28,17 +28,27 @@ public class UiNlTaskEntity {
 
     private String status;
 
+    /** 最近一轮浏览器自动化：RUNNING/COMPLETED/FAILED/CANCELLED；与 {@link #status}（步骤生成流程）分离 */
+    @TableField("last_exec_status")
+    private String lastExecStatus;
+
     @TableField("submitted_by")
     private Long submittedBy;
 
     @TableField("submitted_at")
     private LocalDateTime submittedAt;
 
-    @TableField("started_at")
-    private LocalDateTime startedAt;
+    @TableField("plan_started_at")
+    private LocalDateTime planStartedAt;
 
-    @TableField("finished_at")
-    private LocalDateTime finishedAt;
+    @TableField("plan_finished_at")
+    private LocalDateTime planFinishedAt;
+
+    @TableField("exec_started_at")
+    private LocalDateTime execStartedAt;
+
+    @TableField("exec_finished_at")
+    private LocalDateTime execFinishedAt;
 
     @TableField("runner_run_id")
     private String runnerRunId;
@@ -60,14 +70,8 @@ public class UiNlTaskEntity {
     @TableField("timeout_seconds")
     private Integer timeoutSeconds;
 
-    @TableField("payload_json")
-    private String payloadJson;
-
     @TableField("result_summary")
     private String resultSummary;
-
-    @TableField("interrupt_by")
-    private Long interruptBy;
 
     @TableField("interrupt_reason")
     private String interruptReason;

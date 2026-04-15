@@ -3,6 +3,7 @@ import { inject, onMounted, ref, type Ref } from 'vue'
 import { api, type Project, type Version } from '../api/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { formatDateTime } from '../utils/formatDateTime'
+import { VERSION_STATUS, statusLabel as dictStatusLabel, statusTagType as dictStatusTagType } from '../utils/statusDictionary'
 
 const projectId = ref('')
 const projects = ref<Project[]>([])
@@ -34,16 +35,12 @@ const editForm = ref({
 const message = ref('')
 const projectNameMap = ref<Record<number, string>>({})
 
-/** 与后端枚举一致，仅用于展示 */
-const VERSION_STATUS_LABEL: Record<string, string> = {
-  DRAFT: '草稿',
-  PUBLISHED: '已发布',
+function versionStatusLabel(status: string | undefined) {
+  return dictStatusLabel(VERSION_STATUS, status, '-')
 }
 
-function versionStatusLabel(status: string | undefined) {
-  if (status == null || String(status).trim() === '') return '-'
-  const key = String(status).trim().toUpperCase()
-  return VERSION_STATUS_LABEL[key] ?? status
+function versionStatusTagType(status: string | undefined) {
+  return dictStatusTagType(VERSION_STATUS, status, 'info')
 }
 
 function rememberProjectId(value: string) {
@@ -258,7 +255,9 @@ onMounted(async () => {
             <template #default="{ row }">{{ row.name || '-' }}</template>
           </el-table-column>
           <el-table-column label="状态" width="120">
-            <template #default="{ row }">{{ versionStatusLabel(row.status) }}</template>
+            <template #default="{ row }">
+              <el-tag size="small" :type="versionStatusTagType(row.status)">{{ versionStatusLabel(row.status) }}</el-tag>
+            </template>
           </el-table-column>
           <el-table-column label="创建时间" min-width="170">
             <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>

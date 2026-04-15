@@ -3,6 +3,7 @@ package com.testcase.backend.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.testcase.backend.common.ApiResponse;
+import com.testcase.backend.common.StatusConstants;
 import com.testcase.backend.dto.ModelConfigDtos;
 import com.testcase.backend.entity.ModelConfigEntity;
 import com.testcase.backend.mapper.ModelConfigMapper;
@@ -69,7 +70,7 @@ public class ModelConfigController {
         entity.setApiKeyEncrypted(body.apiKeyEncrypted());
         entity.setTemperature(body.temperature());
         entity.setMaxTokens(body.maxTokens());
-        entity.setStatus("ENABLED");
+        entity.setStatus(StatusConstants.Switch.ENABLED);
         entity.setCreatedBy(userId);
         entity.setUpdatedBy(userId);
         entity.setCreatedAt(now);
@@ -124,12 +125,12 @@ public class ModelConfigController {
 
     @PostMapping("/{id}/enable")
     public ApiResponse<Void> enable(HttpServletRequest request, @PathVariable Long id) {
-        return setStatus(request, id, "ENABLED");
+        return setStatus(request, id, StatusConstants.Switch.ENABLED);
     }
 
     @PostMapping("/{id}/disable")
     public ApiResponse<Void> disable(HttpServletRequest request, @PathVariable Long id) {
-        return setStatus(request, id, "DISABLED");
+        return setStatus(request, id, StatusConstants.Switch.DISABLED);
     }
 
     @PostMapping("/{id}/test-connection")

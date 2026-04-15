@@ -1,0 +1,208 @@
+{
+  "history": [
+    {
+      "model_output": null,
+      "result": [
+        {
+          "is_done": false,
+          "error": "Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': 'b48b5be4-fe58-93c2-96db-e29a75c467b0'}",
+          "include_extracted_content_only_once": false,
+          "include_in_memory": false
+        }
+      ],
+      "state": {
+        "tabs": [
+          {
+            "url": "about:blank",
+            "title": "",
+            "target_id": "E529",
+            "parent_target_id": null
+          }
+        ],
+        "screenshot_path": null,
+        "interacted_element": [
+          null
+        ],
+        "url": "about:blank",
+        "title": "Empty Tab"
+      },
+      "metadata": {
+        "step_start_time": 1776234590.0043755,
+        "step_end_time": 1776234595.5284438,
+        "step_number": 1,
+        "step_interval": null
+      },
+      "state_message": "<agent_history>\nAgent initialized\n</agent_history>\n\n<agent_state>\n<user_request>\n先打开 https://www.baidu.com/，然后执行以下任务：\n\n【语言】全程使用简体中文输出：思考、评估、下一步目标(next_goal)、向用户说明的文字均用中文（URL、代码、英文专有名词可保留原文）。\n\n【窗口】有界面模式下默认使用 Chrome --start-maximized；若配置了 BROWSER_WINDOW_SIZE 则为固定窗口。不要用页面脚本改窗口大小。禁止用 evaluate 执行 window.moveTo、window.resizeTo、requestFullscreen 或拼接 screen.availWidth/Height 等去「最大化」，在自动化里常无效且模型易写出语法错误（如多余逗号）。若规划步骤含「窗口最大化」「全屏」类描述：不要写任何窗口相关 JS；用 wait 等待 1～2 秒或直接根据页面已可见判定该步完成并进入下一步。\n\n\n\n严格遵守下列步骤顺序，不要跳过；每步完成后根据预期自检，再继续下一步。\n\n你必须严格按顺序完成以下步骤，不要跳过。\n每步完成后根据「预期」自检，确认达到预期后再执行下一步。\n\n第 1 步 — 步骤1\n操作：打开浏览器并访问入口地址 https://www.baidu.com\n预期：百度首页加载成功，可见搜索输入框\n\n第 2 步 — 步骤2\n操作：在搜索输入框中输入文本 TesterHome\n预期：搜索框内显示已输入的文本 TesterHome\n\n第 3 步 — 步骤3\n操作：点击搜索按钮执行搜索\n预期：页面跳转至搜索结果页，显示相关结果列表\n\n第 4 步 — 步骤4\n操作：在搜索结果中找到并点击 TesterHome 官网链接\n预期：成功跳转至 TesterHome 官方网站页面\n</user_request>\n<file_system>\n\n</file_system>\n<todo_contents>\n[empty todo.md, fill it when applicable]\n</todo_contents>\n<step_info>Step1 maximum:500\nToday:2026-04-15</step_info>\n</agent_state>\n<browser_state>\n<page_stats>Page appears empty (SPA not loaded?) - 0 links, 0 interactive, 0 iframes, 0 total elements</page_stats>\n\nAvailable tabs:\nTab E529: about:blank - \n\n<page_info>0.0 pages above, 0.0 pages below</page_info>\n\nInteractive elements:\n[Start of page]\nEmpty DOM tree (you might have to wait for the page to load)\n[End of page]\n</browser_state>\n"
+    },
+    {
+      "model_output": null,
+      "result": [
+        {
+          "is_done": false,
+          "error": "Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': 'e12eba0c-d932-99c9-9b10-617059dd752d'}",
+          "include_extracted_content_only_once": false,
+          "include_in_memory": false
+        }
+      ],
+      "state": {
+        "tabs": [
+          {
+            "url": "about:blank",
+            "title": "",
+            "target_id": "E529",
+            "parent_target_id": null
+          }
+        ],
+        "screenshot_path": null,
+        "interacted_element": [
+          null
+        ],
+        "url": "about:blank",
+        "title": "Empty Tab"
+      },
+      "metadata": {
+        "step_start_time": 1776234595.5286639,
+        "step_end_time": 1776234599.9365857,
+        "step_number": 2,
+        "step_interval": 5.524068355560303
+      },
+      "state_message": "<agent_history>\nAgent initialized\n<step>\nAgent failed to output in the right format.\n</agent_history>\n\n<agent_state>\n<user_request>\n先打开 https://www.baidu.com/，然后执行以下任务：\n\n【语言】全程使用简体中文输出：思考、评估、下一步目标(next_goal)、向用户说明的文字均用中文（URL、代码、英文专有名词可保留原文）。\n\n【窗口】有界面模式下默认使用 Chrome --start-maximized；若配置了 BROWSER_WINDOW_SIZE 则为固定窗口。不要用页面脚本改窗口大小。禁止用 evaluate 执行 window.moveTo、window.resizeTo、requestFullscreen 或拼接 screen.availWidth/Height 等去「最大化」，在自动化里常无效且模型易写出语法错误（如多余逗号）。若规划步骤含「窗口最大化」「全屏」类描述：不要写任何窗口相关 JS；用 wait 等待 1～2 秒或直接根据页面已可见判定该步完成并进入下一步。\n\n\n\n严格遵守下列步骤顺序，不要跳过；每步完成后根据预期自检，再继续下一步。\n\n你必须严格按顺序完成以下步骤，不要跳过。\n每步完成后根据「预期」自检，确认达到预期后再执行下一步。\n\n第 1 步 — 步骤1\n操作：打开浏览器并访问入口地址 https://www.baidu.com\n预期：百度首页加载成功，可见搜索输入框\n\n第 2 步 — 步骤2\n操作：在搜索输入框中输入文本 TesterHome\n预期：搜索框内显示已输入的文本 TesterHome\n\n第 3 步 — 步骤3\n操作：点击搜索按钮执行搜索\n预期：页面跳转至搜索结果页，显示相关结果列表\n\n第 4 步 — 步骤4\n操作：在搜索结果中找到并点击 TesterHome 官网链接\n预期：成功跳转至 TesterHome 官方网站页面\n</user_request>\n<file_system>\n\n</file_system>\n<todo_contents>\n[empty todo.md, fill it when applicable]\n</todo_contents>\n<step_info>Step2 maximum:500\nToday:2026-04-15</step_info>\n</agent_state>\n<browser_state>\n<page_stats>Page appears empty (SPA not loaded?) - 0 links, 0 interactive, 0 iframes, 0 total elements</page_stats>\n\nAvailable tabs:\nTab E529: about:blank - \n\n<page_info>0.0 pages above, 0.0 pages below</page_info>\n\nInteractive elements:\n[Start of page]\nEmpty DOM tree (you might have to wait for the page to load)\n[End of page]\n</browser_state>\n"
+    },
+    {
+      "model_output": null,
+      "result": [
+        {
+          "is_done": false,
+          "error": "Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': 'f0ca0448-3012-923f-a743-dc42f14b3369'}",
+          "include_extracted_content_only_once": false,
+          "include_in_memory": false
+        }
+      ],
+      "state": {
+        "tabs": [
+          {
+            "url": "about:blank",
+            "title": "",
+            "target_id": "E529",
+            "parent_target_id": null
+          }
+        ],
+        "screenshot_path": null,
+        "interacted_element": [
+          null
+        ],
+        "url": "about:blank",
+        "title": "Empty Tab"
+      },
+      "metadata": {
+        "step_start_time": 1776234599.9368808,
+        "step_end_time": 1776234604.129382,
+        "step_number": 3,
+        "step_interval": 4.40792179107666
+      },
+      "state_message": "<agent_history>\nAgent initialized\n<step>\nAgent failed to output in the right format.\n<step>\nAgent failed to output in the right format.\n</agent_history>\n\n<agent_state>\n<user_request>\n先打开 https://www.baidu.com/，然后执行以下任务：\n\n【语言】全程使用简体中文输出：思考、评估、下一步目标(next_goal)、向用户说明的文字均用中文（URL、代码、英文专有名词可保留原文）。\n\n【窗口】有界面模式下默认使用 Chrome --start-maximized；若配置了 BROWSER_WINDOW_SIZE 则为固定窗口。不要用页面脚本改窗口大小。禁止用 evaluate 执行 window.moveTo、window.resizeTo、requestFullscreen 或拼接 screen.availWidth/Height 等去「最大化」，在自动化里常无效且模型易写出语法错误（如多余逗号）。若规划步骤含「窗口最大化」「全屏」类描述：不要写任何窗口相关 JS；用 wait 等待 1～2 秒或直接根据页面已可见判定该步完成并进入下一步。\n\n\n\n严格遵守下列步骤顺序，不要跳过；每步完成后根据预期自检，再继续下一步。\n\n你必须严格按顺序完成以下步骤，不要跳过。\n每步完成后根据「预期」自检，确认达到预期后再执行下一步。\n\n第 1 步 — 步骤1\n操作：打开浏览器并访问入口地址 https://www.baidu.com\n预期：百度首页加载成功，可见搜索输入框\n\n第 2 步 — 步骤2\n操作：在搜索输入框中输入文本 TesterHome\n预期：搜索框内显示已输入的文本 TesterHome\n\n第 3 步 — 步骤3\n操作：点击搜索按钮执行搜索\n预期：页面跳转至搜索结果页，显示相关结果列表\n\n第 4 步 — 步骤4\n操作：在搜索结果中找到并点击 TesterHome 官网链接\n预期：成功跳转至 TesterHome 官方网站页面\n</user_request>\n<file_system>\n\n</file_system>\n<todo_contents>\n[empty todo.md, fill it when applicable]\n</todo_contents>\n<step_info>Step3 maximum:500\nToday:2026-04-15</step_info>\n</agent_state>\n<browser_state>\n<page_stats>Page appears empty (SPA not loaded?) - 0 links, 0 interactive, 0 iframes, 0 total elements</page_stats>\n\nAvailable tabs:\nTab E529: about:blank - \n\n<page_info>0.0 pages above, 0.0 pages below</page_info>\n\nInteractive elements:\n[Start of page]\nEmpty DOM tree (you might have to wait for the page to load)\n[End of page]\n</browser_state>\n"
+    },
+    {
+      "model_output": null,
+      "result": [
+        {
+          "is_done": false,
+          "error": "Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': '4cd0b36f-975c-9cb9-aaad-205b21d0c129'}",
+          "include_extracted_content_only_once": false,
+          "include_in_memory": false
+        }
+      ],
+      "state": {
+        "tabs": [
+          {
+            "url": "about:blank",
+            "title": "",
+            "target_id": "E529",
+            "parent_target_id": null
+          }
+        ],
+        "screenshot_path": null,
+        "interacted_element": [
+          null
+        ],
+        "url": "about:blank",
+        "title": "Empty Tab"
+      },
+      "metadata": {
+        "step_start_time": 1776234604.1294997,
+        "step_end_time": 1776234605.832133,
+        "step_number": 4,
+        "step_interval": 4.192501068115234
+      },
+      "state_message": "<agent_history>\nAgent initialized\n<step>\nAgent failed to output in the right format.\n<step>\nAgent failed to output in the right format.\n<step>\nAgent failed to output in the right format.\n</agent_history>\n\n<agent_state>\n<user_request>\n先打开 https://www.baidu.com/，然后执行以下任务：\n\n【语言】全程使用简体中文输出：思考、评估、下一步目标(next_goal)、向用户说明的文字均用中文（URL、代码、英文专有名词可保留原文）。\n\n【窗口】有界面模式下默认使用 Chrome --start-maximized；若配置了 BROWSER_WINDOW_SIZE 则为固定窗口。不要用页面脚本改窗口大小。禁止用 evaluate 执行 window.moveTo、window.resizeTo、requestFullscreen 或拼接 screen.availWidth/Height 等去「最大化」，在自动化里常无效且模型易写出语法错误（如多余逗号）。若规划步骤含「窗口最大化」「全屏」类描述：不要写任何窗口相关 JS；用 wait 等待 1～2 秒或直接根据页面已可见判定该步完成并进入下一步。\n\n\n\n严格遵守下列步骤顺序，不要跳过；每步完成后根据预期自检，再继续下一步。\n\n你必须严格按顺序完成以下步骤，不要跳过。\n每步完成后根据「预期」自检，确认达到预期后再执行下一步。\n\n第 1 步 — 步骤1\n操作：打开浏览器并访问入口地址 https://www.baidu.com\n预期：百度首页加载成功，可见搜索输入框\n\n第 2 步 — 步骤2\n操作：在搜索输入框中输入文本 TesterHome\n预期：搜索框内显示已输入的文本 TesterHome\n\n第 3 步 — 步骤3\n操作：点击搜索按钮执行搜索\n预期：页面跳转至搜索结果页，显示相关结果列表\n\n第 4 步 — 步骤4\n操作：在搜索结果中找到并点击 TesterHome 官网链接\n预期：成功跳转至 TesterHome 官方网站页面\n</user_request>\n<file_system>\n\n</file_system>\n<todo_contents>\n[empty todo.md, fill it when applicable]\n</todo_contents>\n<step_info>Step4 maximum:500\nToday:2026-04-15</step_info>\n</agent_state>\n<browser_state>\n<page_stats>Page appears empty (SPA not loaded?) - 0 links, 0 interactive, 0 iframes, 0 total elements</page_stats>\n\nAvailable tabs:\nTab E529: about:blank - \n\n<page_info>0.0 pages above, 0.0 pages below</page_info>\n\nInteractive elements:\n[Start of page]\nEmpty DOM tree (you might have to wait for the page to load)\n[End of page]\n</browser_state>\n"
+    },
+    {
+      "model_output": null,
+      "result": [
+        {
+          "is_done": false,
+          "error": "Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': 'b2b843e3-5583-9628-81bf-f4178c7d3227'}",
+          "include_extracted_content_only_once": false,
+          "include_in_memory": false
+        }
+      ],
+      "state": {
+        "tabs": [
+          {
+            "url": "about:blank",
+            "title": "",
+            "target_id": "E529",
+            "parent_target_id": null
+          }
+        ],
+        "screenshot_path": null,
+        "interacted_element": [
+          null
+        ],
+        "url": "about:blank",
+        "title": "Empty Tab"
+      },
+      "metadata": {
+        "step_start_time": 1776234605.8322425,
+        "step_end_time": 1776234607.5070634,
+        "step_number": 5,
+        "step_interval": 1.7026333808898926
+      },
+      "state_message": "<agent_history>\nAgent initialized\n<step>\nAgent failed to output in the right format.\n<step>\nAgent failed to output in the right format.\n<step>\nAgent failed to output in the right format.\n<step>\nAgent failed to output in the right format.\n</agent_history>\n\n<agent_state>\n<user_request>\n先打开 https://www.baidu.com/，然后执行以下任务：\n\n【语言】全程使用简体中文输出：思考、评估、下一步目标(next_goal)、向用户说明的文字均用中文（URL、代码、英文专有名词可保留原文）。\n\n【窗口】有界面模式下默认使用 Chrome --start-maximized；若配置了 BROWSER_WINDOW_SIZE 则为固定窗口。不要用页面脚本改窗口大小。禁止用 evaluate 执行 window.moveTo、window.resizeTo、requestFullscreen 或拼接 screen.availWidth/Height 等去「最大化」，在自动化里常无效且模型易写出语法错误（如多余逗号）。若规划步骤含「窗口最大化」「全屏」类描述：不要写任何窗口相关 JS；用 wait 等待 1～2 秒或直接根据页面已可见判定该步完成并进入下一步。\n\n\n\n严格遵守下列步骤顺序，不要跳过；每步完成后根据预期自检，再继续下一步。\n\n你必须严格按顺序完成以下步骤，不要跳过。\n每步完成后根据「预期」自检，确认达到预期后再执行下一步。\n\n第 1 步 — 步骤1\n操作：打开浏览器并访问入口地址 https://www.baidu.com\n预期：百度首页加载成功，可见搜索输入框\n\n第 2 步 — 步骤2\n操作：在搜索输入框中输入文本 TesterHome\n预期：搜索框内显示已输入的文本 TesterHome\n\n第 3 步 — 步骤3\n操作：点击搜索按钮执行搜索\n预期：页面跳转至搜索结果页，显示相关结果列表\n\n第 4 步 — 步骤4\n操作：在搜索结果中找到并点击 TesterHome 官网链接\n预期：成功跳转至 TesterHome 官方网站页面\n</user_request>\n<file_system>\n\n</file_system>\n<todo_contents>\n[empty todo.md, fill it when applicable]\n</todo_contents>\n<step_info>Step5 maximum:500\nToday:2026-04-15</step_info>\n</agent_state>\n<browser_state>\n<page_stats>Page appears empty (SPA not loaded?) - 0 links, 0 interactive, 0 iframes, 0 total elements</page_stats>\n\nAvailable tabs:\nTab E529: about:blank - \n\n<page_info>0.0 pages above, 0.0 pages below</page_info>\n\nInteractive elements:\n[Start of page]\nEmpty DOM tree (you might have to wait for the page to load)\n[End of page]\n</browser_state>\n"
+    },
+    {
+      "model_output": null,
+      "result": [
+        {
+          "is_done": false,
+          "error": "Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': '8f114d99-040c-9c5d-b3d6-6d661a83f348'}",
+          "include_extracted_content_only_once": false,
+          "include_in_memory": false
+        }
+      ],
+      "state": {
+        "tabs": [
+          {
+            "url": "about:blank",
+            "title": "",
+            "target_id": "E529",
+            "parent_target_id": null
+          }
+        ],
+        "screenshot_path": null,
+        "interacted_element": [
+          null
+        ],
+        "url": "about:blank",
+        "title": "Empty Tab"
+      },
+      "metadata": {
+        "step_start_time": 1776234607.5072138,
+        "step_end_time": 1776234609.0184224,
+        "step_number": 6,
+        "step_interval": 1.674820899963379
+      },
+      "state_message": "<agent_history>\nAgent initialized\n<step>\nAgent failed to output in the right format.\n<step>\nAgent failed to output in the right format.\n<step>\nAgent failed to output in the right format.\n<step>\nAgent failed to output in the right format.\n<step>\nAgent failed to output in the right format.\n</agent_history>\n\n<agent_state>\n<user_request>\n先打开 https://www.baidu.com/，然后执行以下任务：\n\n【语言】全程使用简体中文输出：思考、评估、下一步目标(next_goal)、向用户说明的文字均用中文（URL、代码、英文专有名词可保留原文）。\n\n【窗口】有界面模式下默认使用 Chrome --start-maximized；若配置了 BROWSER_WINDOW_SIZE 则为固定窗口。不要用页面脚本改窗口大小。禁止用 evaluate 执行 window.moveTo、window.resizeTo、requestFullscreen 或拼接 screen.availWidth/Height 等去「最大化」，在自动化里常无效且模型易写出语法错误（如多余逗号）。若规划步骤含「窗口最大化」「全屏」类描述：不要写任何窗口相关 JS；用 wait 等待 1～2 秒或直接根据页面已可见判定该步完成并进入下一步。\n\n\n\n严格遵守下列步骤顺序，不要跳过；每步完成后根据预期自检，再继续下一步。\n\n你必须严格按顺序完成以下步骤，不要跳过。\n每步完成后根据「预期」自检，确认达到预期后再执行下一步。\n\n第 1 步 — 步骤1\n操作：打开浏览器并访问入口地址 https://www.baidu.com\n预期：百度首页加载成功，可见搜索输入框\n\n第 2 步 — 步骤2\n操作：在搜索输入框中输入文本 TesterHome\n预期：搜索框内显示已输入的文本 TesterHome\n\n第 3 步 — 步骤3\n操作：点击搜索按钮执行搜索\n预期：页面跳转至搜索结果页，显示相关结果列表\n\n第 4 步 — 步骤4\n操作：在搜索结果中找到并点击 TesterHome 官网链接\n预期：成功跳转至 TesterHome 官方网站页面\n</user_request>\n<file_system>\n\n</file_system>\n<todo_contents>\n[empty todo.md, fill it when applicable]\n</todo_contents>\n<step_info>Step6 maximum:500\nToday:2026-04-15</step_info>\n</agent_state>\n<browser_state>\n<page_stats>Page appears empty (SPA not loaded?) - 0 links, 0 interactive, 0 iframes, 0 total elements</page_stats>\n\nAvailable tabs:\nTab E529: about:blank - \n\n<page_info>0.0 pages above, 0.0 pages below</page_info>\n\nInteractive elements:\n[Start of page]\nEmpty DOM tree (you might have to wait for the page to load)\n[End of page]\n</browser_state>\n"
+    }
+  ]
+}

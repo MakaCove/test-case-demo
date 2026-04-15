@@ -3,6 +3,7 @@ package com.testcase.backend.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.testcase.backend.common.StatusConstants;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.testcase.backend.dto.PagedResult;
@@ -171,8 +172,8 @@ public class TestCaseService {
         entity.setTestData(req.testData());
         entity.setExpectedResult(req.expectedResult());
         entity.setPriority(StringUtils.hasText(req.priority()) ? req.priority().trim().toUpperCase() : "P2");
-        entity.setExecutionStatus("NOT_EXECUTED");
-        entity.setReviewStatus("PENDING");
+        entity.setExecutionStatus(StatusConstants.CaseExecution.NOT_EXECUTED);
+        entity.setReviewStatus(StatusConstants.CaseReview.PENDING);
         entity.setRemark(req.remark());
         entity.setCreatedBy(operatorId);
         entity.setUpdatedBy(operatorId);
@@ -278,7 +279,7 @@ public class TestCaseService {
         String nextPriority = fields.get("priority") == null ? null : String.valueOf(fields.get("priority"));
         String nextRemark = fields.get("remark") == null ? null : String.valueOf(fields.get("remark"));
 
-        if ("REJECTED".equalsIgnoreCase(nextReview) && !StringUtils.hasText(req.reviewComment())) {
+        if (StatusConstants.CaseReview.REJECTED.equalsIgnoreCase(nextReview) && !StringUtils.hasText(req.reviewComment())) {
             throw new IllegalArgumentException("reviewComment is required when reviewStatus=REJECTED");
         }
 
@@ -299,11 +300,11 @@ public class TestCaseService {
                 String normalized = nextReview.trim().toUpperCase();
                 changeStatus(entity, "review_status", entity.getReviewStatus(), normalized, req.reason(), operatorId);
                 entity.setReviewStatus(normalized);
-                if ("REJECTED".equalsIgnoreCase(normalized)) {
+                if (StatusConstants.CaseReview.REJECTED.equalsIgnoreCase(normalized)) {
                     entity.setReviewComment(req.reviewComment());
                     entity.setReviewedBy(operatorId);
                     entity.setReviewedAt(LocalDateTime.now());
-                } else if ("APPROVED".equalsIgnoreCase(normalized)) {
+                } else if (StatusConstants.CaseReview.APPROVED.equalsIgnoreCase(normalized)) {
                     entity.setReviewComment(req.reviewComment());
                     entity.setReviewedBy(operatorId);
                     entity.setReviewedAt(LocalDateTime.now());
@@ -333,7 +334,7 @@ public class TestCaseService {
         }
         if (StringUtils.hasText(req.reviewStatus())) {
             String normalized = req.reviewStatus().trim().toUpperCase();
-            if ("REJECTED".equalsIgnoreCase(normalized) && !StringUtils.hasText(req.reviewComment())) {
+            if (StatusConstants.CaseReview.REJECTED.equalsIgnoreCase(normalized) && !StringUtils.hasText(req.reviewComment())) {
                 throw new IllegalArgumentException("reviewComment is required when reviewStatus=REJECTED");
             }
             changeStatus(entity, "review_status", entity.getReviewStatus(), normalized, req.reason(), operatorId);
@@ -393,8 +394,8 @@ public class TestCaseService {
                 entity.setTestData(d.testData());
                 entity.setExpectedResult(d.expectedResult());
                 entity.setPriority(d.priority());
-                entity.setExecutionStatus("NOT_EXECUTED");
-                entity.setReviewStatus("PENDING");
+                entity.setExecutionStatus(StatusConstants.CaseExecution.NOT_EXECUTED);
+                entity.setReviewStatus(StatusConstants.CaseReview.PENDING);
                 entity.setRemark("LLM JSON · task " + task.getTaskNo());
                 entity.setCreatedBy(operatorId);
                 entity.setUpdatedBy(operatorId);
@@ -436,8 +437,8 @@ public class TestCaseService {
             entity.setTestData(null);
             entity.setExpectedResult("符合预期");
             entity.setPriority("P2");
-            entity.setExecutionStatus("NOT_EXECUTED");
-            entity.setReviewStatus("PENDING");
+            entity.setExecutionStatus(StatusConstants.CaseExecution.NOT_EXECUTED);
+            entity.setReviewStatus(StatusConstants.CaseReview.PENDING);
             entity.setRemark("placeholder · task " + task.getTaskNo() + (StringUtils.hasText(llmContent) ? " (parse failed)" : ""));
             entity.setCreatedBy(operatorId);
             entity.setUpdatedBy(operatorId);

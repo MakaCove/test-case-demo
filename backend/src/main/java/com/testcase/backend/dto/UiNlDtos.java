@@ -60,8 +60,7 @@ public class UiNlDtos {
             Boolean headless,
             String browserName,
             String modelKey,
-            Integer timeoutSeconds,
-            String payloadJson
+            Integer timeoutSeconds
     ) {
     }
 
@@ -72,8 +71,7 @@ public class UiNlDtos {
             Boolean headless,
             String browserName,
             String modelKey,
-            Integer timeoutSeconds,
-            String payloadJson
+            Integer timeoutSeconds
     ) {
     }
 
@@ -84,10 +82,13 @@ public class UiNlDtos {
             Long uiNlCaseId,
             String taskNo,
             String status,
+            String lastExecStatus,
             Long submittedBy,
             LocalDateTime submittedAt,
-            LocalDateTime startedAt,
-            LocalDateTime finishedAt,
+            LocalDateTime planStartedAt,
+            LocalDateTime planFinishedAt,
+            LocalDateTime execStartedAt,
+            LocalDateTime execFinishedAt,
             String runnerRunId,
             Long modelConfigId,
             Long promptTemplateId,
@@ -95,7 +96,6 @@ public class UiNlDtos {
             String browserName,
             String modelKey,
             Integer timeoutSeconds,
-            String payloadJson,
             String resultSummary,
             String interruptReason,
             String errorMessage,
@@ -119,7 +119,17 @@ public class UiNlDtos {
             String screenshotPath,
             LocalDateTime startedAt,
             LocalDateTime finishedAt,
-            String rawLog
+            String rawLog,
+            String phase
+    ) {
+    }
+
+    /** 仅更新规划步骤（ui_nl_task_steps）；定位信息仅在执行轨迹 {@code ui_nl_task_exec_steps} 中落库 */
+    public record UpdatePlanStepRequest(
+            @NotBlank(message = "stepTitle is required") String stepTitle,
+            String actionType,
+            @NotBlank(message = "inputValue is required") String inputValue,
+            String expectJson
     ) {
     }
 
@@ -134,12 +144,13 @@ public class UiNlDtos {
             Integer passedSteps,
             Integer failedSteps,
             String summary,
-            String reportJson,
             String artifactsJson,
             LocalDateTime startedAt,
             LocalDateTime finishedAt,
             LocalDateTime createdAt,
-            LocalDateTime updatedAt
+            LocalDateTime updatedAt,
+            String reportFilePath,
+            LocalDateTime reportGeneratedAt
     ) {
     }
 

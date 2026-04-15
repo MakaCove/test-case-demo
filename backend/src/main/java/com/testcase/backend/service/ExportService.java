@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.testcase.backend.common.StatusConstants;
 import com.testcase.backend.dto.ExportDtos;
 import com.testcase.backend.dto.ExportRequestOptions;
 import com.testcase.backend.dto.PagedResult;
@@ -96,7 +97,7 @@ public class ExportService {
         record.setVersionId(req.versionId());
         record.setFormat(format);
         record.setScope(req.scope().trim());
-        record.setStatus("RUNNING");
+        record.setStatus(StatusConstants.Export.RUNNING);
         record.setRequestJson(normalizedJson);
         record.setCreatedBy(operatorId);
         record.setIsDeleted(0);
@@ -128,7 +129,7 @@ public class ExportService {
             Path file = writeMarkdown(record);
             long size = Files.size(file);
             exportRecordMapper.update(null, new LambdaUpdateWrapper<ExportRecordEntity>()
-                    .set(ExportRecordEntity::getStatus, "SUCCESS")
+                    .set(ExportRecordEntity::getStatus, StatusConstants.Export.SUCCESS)
                     .set(ExportRecordEntity::getFilePath, file.toString().replace("\\", "/"))
                     .set(ExportRecordEntity::getFileSize, size)
                     .set(ExportRecordEntity::getErrorMessage, null)
@@ -137,7 +138,7 @@ public class ExportService {
             operationLogService.log("EXPORT", record.getId(), "SUCCESS", null, null, null);
         } catch (Exception e) {
             exportRecordMapper.update(null, new LambdaUpdateWrapper<ExportRecordEntity>()
-                    .set(ExportRecordEntity::getStatus, "FAILED")
+                    .set(ExportRecordEntity::getStatus, StatusConstants.Export.FAILED)
                     .set(ExportRecordEntity::getErrorMessage, e.getMessage())
                     .eq(ExportRecordEntity::getId, record.getId())
                     .eq(ExportRecordEntity::getIsDeleted, 0));

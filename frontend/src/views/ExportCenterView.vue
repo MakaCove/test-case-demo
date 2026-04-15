@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, inject, onMounted, ref, type Ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElTag } from 'element-plus'
 import { api, type ExportRecord, type Project, type Version } from '../api/api'
 import { formatDateTime } from '../utils/formatDateTime'
+import { EXPORT_STATUS, statusLabel as dictStatusLabel, statusTagType as dictStatusTagType } from '../utils/statusDictionary'
 
 const tableDensity = inject<Ref<'default' | 'small'>>('tableDensity', ref('default'))
 
@@ -44,6 +45,14 @@ const safeCreateVersionId = computed(() => {
   const v = Number(createVersionId.value)
   return Number.isInteger(v) && v > 0 ? v : 0
 })
+
+function exportStatusLabel(v?: string) {
+  return dictStatusLabel(EXPORT_STATUS, v, '—')
+}
+
+function exportStatusTagType(v?: string) {
+  return dictStatusTagType(EXPORT_STATUS, v, 'info')
+}
 
 async function loadProjects() {
   projectsLoading.value = true
@@ -184,7 +193,11 @@ onMounted(async () => {
           <el-select v-model="versionId" filterable clearable :loading="versionsLoading" placeholder="版本" style="width: 260px">
             <el-option v-for="v in versions" :key="v.id" :label="`${v.name || '未命名版本'}（${v.versionNo}）`" :value="String(v.id)" />
           </el-select>
-          <el-input v-model="status" placeholder="状态(RUNNING/SUCCESS/FAILED)" clearable style="width: 240px" />
+          <el-select v-model="status" clearable placeholder="状态" style="width: 160px">
+            <el-option label="导出中" value="RUNNING" />
+            <el-option label="成功" value="SUCCESS" />
+            <el-option label="失败" value="FAILED" />
+          </el-select>
         </div>
         <div class="query-actions">
           <el-button type="primary" @click="onSearch">查询</el-button>
@@ -201,7 +214,11 @@ onMounted(async () => {
           <el-table-column prop="format" label="格式" width="90" />
           <el-table-column prop="exportContent" label="导出内容" min-width="140" show-overflow-tooltip />
           <el-table-column prop="scope" label="范围" width="90" />
-          <el-table-column prop="status" label="状态" width="120" />
+          <el-table-column label="状态" width="120">
+            <template #default="{ row }">
+              <el-tag size="small" :type="exportStatusTagType(row.status)">{{ exportStatusLabel(row.status) }}</el-tag>
+            </template>
+          </el-table-column>
           <el-table-column prop="fileSize" label="大小" width="120" />
           <el-table-column prop="errorMessage" label="错误" min-width="220" />
           <el-table-column label="创建时间" min-width="170">

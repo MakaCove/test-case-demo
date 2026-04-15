@@ -3,6 +3,12 @@ import { computed, inject, onMounted, ref, type Ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { api, type Project, type UiNlTask, type Version } from '../api/api'
 import { formatDateTime } from '../utils/formatDateTime'
+import {
+  UI_NL_TASK_EXEC_STATUS,
+  UI_NL_TASK_PLAN_STATUS,
+  statusLabel,
+  statusTagType,
+} from '../utils/statusDictionary'
 
 const tableDensity = inject<Ref<'default' | 'small'>>('tableDensity', ref('default'))
 const router = useRouter()
@@ -14,6 +20,7 @@ const tasks = ref<UiNlTask[]>([])
 const projectId = ref('')
 const versionId = ref('')
 const status = ref('')
+const lastExecStatus = ref('')
 const caseTitleKeyword = ref('')
 const pageNo = ref(1)
 const pageSize = ref(20)
@@ -93,19 +100,16 @@ function caseTitle(caseId: number) {
   return caseTitleMap.value[caseId] || `用例#${caseId}`
 }
 
-function statusLabel(statusValue?: string) {
-  if (!statusValue) return '—'
-  const s = statusValue.trim().toUpperCase()
-  if (s === 'PENDING') return '待启动'
-  if (s === 'QUEUED') return '排队'
-  if (s === 'PLANNING') return '生成中'
-  if (s === 'READY') return '待执行'
-  if (s === 'RUNNING') return '执行中'
-  if (s === 'COMPLETED') return '完成'
-  if (s === 'FAILED') return '失败'
-  if (s === 'INTERRUPTED') return '中断'
-  if (s === 'CANCELLED') return '取消'
-  return statusValue
+function planStatusLabel(statusValue?: string) {
+  return statusLabel(UI_NL_TASK_PLAN_STATUS, statusValue, '—')
+}
+
+function execStatusLabel(v?: string | null) {
+  return statusLabel(UI_NL_TASK_EXEC_STATUS, v, '未执行')
+}
+
+function execStatusTag(v?: string | null) {
+  return statusTagType(UI_NL_TASK_EXEC_STATUS, v, 'info')
 }
 
 watch(projectId, () => {
@@ -134,18 +138,26 @@ onMounted(async () => {
             :value="String(v.id)"
           />
         </el-select>
-        <el-select v-model="status" clearable placeholder="状态" style="width: 160px">
+        <el-select v-model="status" clearable placeholder="步骤生成" style="width: 160px">
           <el-option label="待启动" value="PENDING" />
-          <el-option label="排队" value="QUEUED" />
-          <el-option label="生成中" value="PLANNING" />
-          <el-option label="待执行" value="READY" />
-          <el-option label="失败" value="FAILED" />
-          <el-option label="中断" value="INTERRUPTED" />
+          <el-option label="排队中" value="QUEUED" />
+          <el-option label="规划中" value="PLANNING" />
+          <el-option label="步骤就绪" value="READY" />
+          <el-option label="规划失败" value="FAILED" />
+          <el-option label="规划中断" value="INTERRUPTED" />
+          <el-option label="已取消" value="CANCELLED" />
+        </el-select>
+        <el-select v-model="lastExecStatus" clearable placeholder="执行状态" style="width: 150px">
+          <el-option label="未执行" value="NOT_EXECUTED" />
+          <el-option label="执行中" value="RUNNING" />
+          <el-option label="执行成功" value="COMPLETED" />
+          <el-option label="执行失败" value="FAILED" />
+          <el-option label="已取消" value="CANCELLED" />
         </el-select>
         <el-input v-model="caseTitleKeyword" clearable placeholder="用例标题关键词" style="width: 220px" />
         <div class="query-actions">
           <el-button type="primary" @click="() => { pageNo = 1; loadTasks() }">查询</el-button>
-          <el-button @click="() => { projectId=''; versionId=''; status=''; caseTitleKeyword=''; pageNo=1; loadTasks() }">重置</el-button>
+          <el-button @click="() => { projectId=''; versionId=''; status=''; lastExecStatus=''; caseTitleKeyword=''; pageNo=1; loadTasks() }">重置</el-button>
         </div>
       </div>
     </el-card>
@@ -162,8 +174,15 @@ onMounted(async () => {
         <el-table-column label="用例标题" min-width="200" show-overflow-tooltip>
           <template #default="{ row }">{{ caseTitle(row.uiNlCaseId) }}</template>
         </el-table-column>
-        <el-table-column label="状态" width="110">
-          <template #default="{ row }">{{ statusLabel(row.status) }}</template>
+        <el-table-column label="步骤生成" width="110">
+          <template #default="{ row }">{{ planStatusLabel(row.status) }}</template>
+        </el-table-column>
+        <el-table-column label="执行状态" width="110">
+          <template #default="{ row }">
+            <el-tag size="small" effect="plain" :type="execStatusTag(row.lastExecStatus)">
+              {{ execStatusLabel(row.lastExecStatus) }}
+            </el-tag>
+          </template>
         </el-table-column>
         <el-table-column label="生成时间" width="170">
           <template #default="{ row }">{{ formatDateTime(row.startedAt) }}</template>
@@ -181,7 +200,7 @@ onMounted(async () => {
           v-model:page-size="pageSize"
           :total="total"
           :page-sizes="[10, 20, 50]"
-          layout="total, sizes, prev, pager, next"
+          layout="total, sizes, prev, pager, next, jumper"
           @current-change="loadTasks"
           @size-change="() => { pageNo = 1; loadTasks() }"
         />

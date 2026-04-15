@@ -2,12 +2,21 @@
 import { inject, onMounted, ref, type Ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { api, type UiNlReport } from '../api/api'
+import { api, type Project, type UiNlReport, type Version } from '../api/api'
 import { formatDateTime } from '../utils/formatDateTime'
+import {
+  UI_NL_REPORT_STATUS,
+  statusLabel as dictStatusLabel,
+  statusTagType as dictStatusTagType,
+} from '../utils/statusDictionary'
 
 const tableDensity = inject<Ref<'default' | 'small'>>('tableDensity', ref('default'))
 const route = useRoute()
 
+const projects = ref<Project[]>([])
+const versions = ref<Version[]>([])
+const projectsLoading = ref(false)
+const versionsLoading = ref(false)
 const projectId = ref('')
 const versionId = ref('')
 const status = ref('')
@@ -19,6 +28,40 @@ const total = ref(0)
 
 const detailVisible = ref(false)
 const current = ref<UiNlReport | null>(null)
+
+function reportStatusLabel(v?: string) {
+  return dictStatusLabel(UI_NL_REPORT_STATUS, v, '—')
+}
+
+function reportStatusTagType(v?: string) {
+  return dictStatusTagType(UI_NL_REPORT_STATUS, v, 'info')
+}
+
+async function loadProjects() {
+  projectsLoading.value = true
+  try {
+    const data = await api.getProjects({ pageNo: 1, pageSize: 300 })
+    projects.value = data.records
+  } catch (e: any) {
+    ElMessage.error(e.message || '加载项目失败')
+  } finally {
+    projectsLoading.value = false
+  }
+}
+
+async function loadVersionsForProject(pid: number) {
+  versions.value = []
+  if (!pid) return
+  versionsLoading.value = true
+  try {
+    const data = await api.getAllVersions({ projectId: pid, pageNo: 1, pageSize: 500 })
+    versions.value = data.records
+  } catch (e: any) {
+    ElMessage.error(e.message || '加载版本失败')
+  } finally {
+    versionsLoading.value = false
+  }
+}
 
 async function loadReports() {
   loading.value = true
@@ -49,15 +92,41 @@ async function openDetail(row: UiNlReport) {
   detailVisible.value = true
 }
 
-onMounted(loadReports)
+async function openHtmlReport(row: UiNlReport) {
+  try {
+    const blob = await api.downloadUiNlReportHtml(row.id)
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30_000)
+  } catch (e: any) {
+    ElMessage.error(e.message || '打开 HTML 报告失败')
+  }
+}
+
+onMounted(async () => {
+  await loadProjects()
+  await loadReports()
+})
 </script>
 
 <template>
   <div class="page-shell">
     <el-card>
       <div class="query-row">
-        <el-input v-model="projectId" placeholder="项目ID" style="width: 140px" />
-        <el-input v-model="versionId" placeholder="版本ID" style="width: 140px" />
+        <el-select
+          v-model="projectId"
+          filterable
+          clearable
+          :loading="projectsLoading"
+          placeholder="项目"
+          style="width: 240px"
+          @change="(v:any)=>{ versionId=''; loadVersionsForProject(Number(v || 0)) }"
+        >
+          <el-option v-for="p in projects" :key="p.id" :label="`${p.name}（${p.code}）`" :value="String(p.id)" />
+        </el-select>
+        <el-select v-model="versionId" filterable clearable :loading="versionsLoading" placeholder="版本" style="width: 260px">
+          <el-option v-for="v in versions" :key="v.id" :label="`${v.versionNo}${v.name ? ' - ' + v.name : ''}`" :value="String(v.id)" />
+        </el-select>
         <el-select v-model="status" clearable placeholder="状态" style="width: 140px">
           <el-option label="成功" value="SUCCESS" />
           <el-option label="失败" value="FAILED" />
@@ -71,17 +140,24 @@ onMounted(loadReports)
     <el-card class="table-card">
       <el-table :data="records" :size="tableDensity" border stripe v-loading="loading" height="100%">
         <el-table-column prop="reportNo" label="报告编号" min-width="140" />
-        <el-table-column prop="taskId" label="任务ID" width="90" />
-        <el-table-column prop="status" label="状态" width="100" />
+        <el-table-column prop="taskId" label="任务ID" width="100" />
+        <el-table-column label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag size="small" :type="reportStatusTagType(row.status)">{{ reportStatusLabel(row.status) }}</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="totalSteps" label="总步数" width="90" />
         <el-table-column prop="passedSteps" label="成功" width="80" />
         <el-table-column prop="failedSteps" label="失败" width="80" />
         <el-table-column prop="summary" label="摘要" min-width="220" show-overflow-tooltip />
-        <el-table-column label="开始" width="170"><template #default="{ row }">{{ formatDateTime(row.startedAt) }}</template></el-table-column>
-        <el-table-column label="结束" width="170"><template #default="{ row }">{{ formatDateTime(row.finishedAt) }}</template></el-table-column>
+        <el-table-column label="执行开始" width="170"><template #default="{ row }">{{ formatDateTime(row.startedAt) }}</template></el-table-column>
+        <el-table-column label="执行结束" width="170"><template #default="{ row }">{{ formatDateTime(row.finishedAt) }}</template></el-table-column>
         <el-table-column label="创建" width="170"><template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template></el-table-column>
-        <el-table-column label="操作" width="90" fixed="right">
-          <template #default="{ row }"><el-button link type="primary" @click="openDetail(row)">详情</el-button></template>
+        <el-table-column label="操作" width="170" fixed="right">
+          <template #default="{ row }">
+            <el-button link type="primary" @click="openDetail(row)">详情</el-button>
+            <el-button link type="success" :disabled="!row.reportFilePath" @click="openHtmlReport(row)">HTML</el-button>
+          </template>
         </el-table-column>
       </el-table>
       <div class="pager">
@@ -90,27 +166,35 @@ onMounted(loadReports)
           v-model:page-size="pageSize"
           :total="total"
           :page-sizes="[10, 20, 50]"
-          layout="total, sizes, prev, pager, next"
+          layout="total, sizes, prev, pager, next, jumper"
           @current-change="loadReports"
           @size-change="() => { pageNo = 1; loadReports() }"
         />
       </div>
     </el-card>
 
-    <el-drawer v-model="detailVisible" title="报告详情" size="720px">
+    <el-drawer v-model="detailVisible" title="报告详情" size="960px">
       <div v-if="current">
         <el-descriptions :column="2" border>
           <el-descriptions-item label="报告编号">{{ current.reportNo }}</el-descriptions-item>
           <el-descriptions-item label="任务ID">{{ current.taskId }}</el-descriptions-item>
-          <el-descriptions-item label="状态">{{ current.status }}</el-descriptions-item>
+          <el-descriptions-item label="状态">{{ reportStatusLabel(current.status) }}</el-descriptions-item>
           <el-descriptions-item label="步数">{{ current.totalSteps }} / 成功 {{ current.passedSteps }} / 失败 {{ current.failedSteps }}</el-descriptions-item>
-          <el-descriptions-item label="开始时间">{{ formatDateTime(current.startedAt) }}</el-descriptions-item>
-          <el-descriptions-item label="结束时间">{{ formatDateTime(current.finishedAt) }}</el-descriptions-item>
+          <el-descriptions-item label="执行开始">{{ formatDateTime(current.startedAt) }}</el-descriptions-item>
+          <el-descriptions-item label="执行结束">{{ formatDateTime(current.finishedAt) }}</el-descriptions-item>
+          <el-descriptions-item label="HTML 生成时间">{{ formatDateTime(current.reportGeneratedAt) }}</el-descriptions-item>
+          <el-descriptions-item label="HTML 路径">{{ current.reportFilePath || '—' }}</el-descriptions-item>
         </el-descriptions>
         <el-divider />
         <el-form label-position="top">
-          <el-form-item label="摘要"><el-input :model-value="current.summary || ''" type="textarea" :rows="3" readonly /></el-form-item>
-          <el-form-item label="reportJson"><el-input :model-value="current.reportJson || ''" type="textarea" :rows="8" readonly /></el-form-item>
+          <el-form-item label="摘要">
+            <el-input
+              :model-value="current.summary || ''"
+              type="textarea"
+              :autosize="{ minRows: 8, maxRows: 24 }"
+              readonly
+            />
+          </el-form-item>
           <el-form-item label="artifactsJson"><el-input :model-value="current.artifactsJson || ''" type="textarea" :rows="6" readonly /></el-form-item>
         </el-form>
       </div>

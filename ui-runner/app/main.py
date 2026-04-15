@@ -85,6 +85,7 @@ async def run_task(req: RunRequest, authorization: str | None = Header(default=N
     state = await service.submit_run(
         run_id=req.runId,
         task_text=req.taskText,
+        planned_steps=req.plannedSteps,
         base_url=req.baseUrl,
         headless=req.headless,
         model=req.model,
@@ -97,7 +98,11 @@ async def run_task(req: RunRequest, authorization: str | None = Header(default=N
 async def get_status(run_id: str, authorization: str | None = Header(default=None)):
     _check_auth(authorization)
     state = service.get_state(run_id)
-    if not state:
+    if state is None:
+        state = service.load_state_from_disk(run_id)
+        if state is not None:
+            service.remember_state(state)
+    if state is None:
         raise HTTPException(status_code=404, detail="run not found")
     return StatusResponse(
         runId=state.run_id,

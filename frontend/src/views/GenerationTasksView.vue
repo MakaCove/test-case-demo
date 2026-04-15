@@ -4,6 +4,11 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { api, type GenerationTask, type Project, type Version } from '../api/api'
 import { useRouter } from 'vue-router'
 import { formatDateTime } from '../utils/formatDateTime'
+import {
+  GENERATION_TASK_STATUS,
+  statusLabel as dictStatusLabel,
+  statusTagType as dictStatusTagType,
+} from '../utils/statusDictionary'
 
 const tableDensity = inject<Ref<'default' | 'small'>>('tableDensity', ref('default'))
 const router = useRouter()
@@ -668,24 +673,9 @@ function caseCategoryTagType(caseCategory: string | undefined) {
   return c === 'API' ? 'warning' : 'primary'
 }
 
-/** 任务状态中文（存储为 FAILED/QUEUED/RUNNING/COMPLETED/CANCELLED/PENDING） */
+/** 任务状态中文展示：统一走状态词典，存储值仍为英文枚举。 */
 function taskStatusLabel(s: GenerationTask['status'] | string | undefined) {
-  switch (s) {
-    case 'PENDING':
-      return '待启动'
-    case 'QUEUED':
-      return '排队中'
-    case 'RUNNING':
-      return '运行中'
-    case 'COMPLETED':
-      return '已完成'
-    case 'FAILED':
-      return '失败'
-    case 'CANCELLED':
-      return '已取消'
-    default:
-      return s ? String(s) : '-'
-  }
+  return dictStatusLabel(GENERATION_TASK_STATUS, s, '-')
 }
 
 /** 失败态补充说明（悬停查看：含用户中断原因） */
@@ -701,20 +691,7 @@ function taskStatusTooltip(row: GenerationTask) {
 
 /** 任务状态列标签色（深色实心，与「用例类型」浅色描边区分） */
 function statusTagType(s: GenerationTask['status']) {
-  switch (s) {
-    case 'QUEUED':
-      return 'info'
-    case 'RUNNING':
-      return 'warning'
-    case 'COMPLETED':
-      return 'success'
-    case 'FAILED':
-      return 'danger'
-    case 'CANCELLED':
-      return 'info'
-    default:
-      return 'info'
-  }
+  return dictStatusTagType(GENERATION_TASK_STATUS, s, 'info')
 }
 
 onMounted(async () => {
@@ -761,7 +738,7 @@ onUnmounted(() => {
             <el-option label="排队中" value="QUEUED" />
             <el-option label="运行中" value="RUNNING" />
             <el-option label="已完成" value="COMPLETED" />
-            <el-option label="失败" value="FAIL" />
+            <el-option label="失败" value="FAILED" />
             <el-option label="已取消" value="CANCELLED" />
           </el-select>
         </div>
@@ -797,6 +774,18 @@ onUnmounted(() => {
               {{ versionNameMap.get(row.versionId) || `版本#${row.versionId}` }}
             </template>
           </el-table-column>
+          <el-table-column label="状态" width="120">
+            <template #default="{ row }">
+              <el-tooltip v-if="taskStatusTooltip(row)" :content="taskStatusTooltip(row)" placement="top">
+                <el-tag size="small" effect="dark" :type="statusTagType(row.status)">
+                  {{ taskStatusLabel(row.status) }}
+                </el-tag>
+              </el-tooltip>
+              <el-tag v-else size="small" effect="dark" :type="statusTagType(row.status)">
+                {{ taskStatusLabel(row.status) }}
+              </el-tag>
+            </template>
+          </el-table-column>
           <el-table-column label="需求资产（编码 · 标题）" min-width="300">
             <template #default="{ row }">
               <template v-if="row.requirementAssets?.length">
@@ -818,24 +807,6 @@ onUnmounted(() => {
               <span v-else class="text-muted">—</span>
             </template>
           </el-table-column>
-          <el-table-column label="状态" width="120">
-            <template #default="{ row }">
-              <el-tooltip v-if="taskStatusTooltip(row)" :content="taskStatusTooltip(row)" placement="top">
-                <el-tag size="small" effect="dark" :type="statusTagType(row.status)">
-                  {{ taskStatusLabel(row.status) }}
-                </el-tag>
-              </el-tooltip>
-              <el-tag v-else size="small" effect="dark" :type="statusTagType(row.status)">
-                {{ taskStatusLabel(row.status) }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column label="创建时间" min-width="170">
-            <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
-          </el-table-column>
-          <el-table-column label="更新时间" min-width="170">
-            <template #default="{ row }">{{ formatDateTime(row.updatedAt) }}</template>
-          </el-table-column>
           <el-table-column label="提交时间" min-width="170">
             <template #default="{ row }">{{ formatDateTime(row.submittedAt) }}</template>
           </el-table-column>
@@ -844,6 +815,12 @@ onUnmounted(() => {
           </el-table-column>
           <el-table-column label="结束时间" min-width="170">
             <template #default="{ row }">{{ formatDateTime(row.finishedAt) }}</template>
+          </el-table-column>
+          <el-table-column label="创建时间" min-width="170">
+            <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
+          </el-table-column>
+          <el-table-column label="更新时间" min-width="170">
+            <template #default="{ row }">{{ formatDateTime(row.updatedAt) }}</template>
           </el-table-column>
           <el-table-column prop="errorMessage" label="错误" min-width="220" />
           <el-table-column label="操作" width="340" fixed="right">

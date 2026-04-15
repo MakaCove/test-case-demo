@@ -3,6 +3,7 @@ package com.testcase.backend.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.testcase.backend.common.ApiResponse;
+import com.testcase.backend.common.StatusConstants;
 import com.testcase.backend.dto.PromptTemplateDtos;
 import com.testcase.backend.entity.PromptTemplateEntity;
 import com.testcase.backend.mapper.PromptTemplateMapper;
@@ -69,7 +70,7 @@ public class PromptTemplateController {
         entity.setScopeId(body.scopeId());
         entity.setVersionNo(1);
         entity.setContent(body.content());
-        entity.setStatus("ENABLED");
+        entity.setStatus(StatusConstants.Switch.ENABLED);
         entity.setRemark(body.remark());
         entity.setCreatedBy(userId);
         entity.setUpdatedBy(userId);
@@ -122,12 +123,12 @@ public class PromptTemplateController {
 
     @PostMapping("/{id}/enable")
     public ApiResponse<Void> enable(HttpServletRequest request, @PathVariable Long id) {
-        return setStatus(request, id, "ENABLED");
+        return setStatus(request, id, StatusConstants.Switch.ENABLED);
     }
 
     @PostMapping("/{id}/disable")
     public ApiResponse<Void> disable(HttpServletRequest request, @PathVariable Long id) {
-        return setStatus(request, id, "DISABLED");
+        return setStatus(request, id, StatusConstants.Switch.DISABLED);
     }
 
     private ApiResponse<Void> setStatus(HttpServletRequest request, Long id, String status) {

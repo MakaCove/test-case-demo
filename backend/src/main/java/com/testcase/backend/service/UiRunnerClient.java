@@ -2,6 +2,7 @@ package com.testcase.backend.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,15 +45,26 @@ public class UiRunnerClient {
                 .build();
     }
 
-    public RunResponse run(String runId, String taskText, String baseUrl, boolean headless, String model, Integer timeoutSeconds) {
+    public RunResponse run(
+            String runId,
+            String taskText,
+            String baseUrl,
+            boolean headless,
+            String model,
+            Integer timeoutSeconds,
+            ArrayNode plannedSteps
+    ) {
         try {
             var payload = objectMapper.createObjectNode();
             payload.put("runId", runId);
-            payload.put("taskText", taskText);
+            payload.put("taskText", taskText == null ? "" : taskText);
             if (StringUtils.hasText(baseUrl)) payload.put("baseUrl", baseUrl.trim());
             payload.put("headless", headless);
             if (StringUtils.hasText(model)) payload.put("model", model.trim());
             if (timeoutSeconds != null && timeoutSeconds > 0) payload.put("timeoutSeconds", timeoutSeconds);
+            if (plannedSteps != null && plannedSteps.size() > 0) {
+                payload.set("plannedSteps", plannedSteps);
+            }
             JsonNode node = postJson("/run", payload.toString());
             return new RunResponse(
                     node.path("accepted").asBoolean(false),

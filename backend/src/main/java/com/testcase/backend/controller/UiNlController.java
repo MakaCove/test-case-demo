@@ -6,6 +6,11 @@ import com.testcase.backend.dto.UiNlDtos;
 import com.testcase.backend.service.UiNlService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -75,10 +80,11 @@ public class UiNlController {
             @RequestParam(required = false) Long versionId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String caseTitle,
+            @RequestParam(required = false) String lastExecStatus,
             @RequestParam(defaultValue = "1") int pageNo,
             @RequestParam(defaultValue = "20") int pageSize
     ) {
-        return ApiResponse.success(uiNlService.listTasks(projectId, versionId, status, caseTitle, pageNo, pageSize));
+        return ApiResponse.success(uiNlService.listTasks(projectId, versionId, status, caseTitle, lastExecStatus, pageNo, pageSize));
     }
 
     @GetMapping("/ui-nl-tasks/{id}")
@@ -138,13 +144,32 @@ public class UiNlController {
     }
 
     @GetMapping("/ui-nl-tasks/{id}/steps")
-    public ApiResponse<List<UiNlDtos.StepItem>> listSteps(@PathVariable Long id) {
-        return ApiResponse.success(uiNlService.listTaskSteps(id));
+    public ApiResponse<List<UiNlDtos.StepItem>> listSteps(
+            @PathVariable Long id,
+            @RequestParam(required = false) String phase
+    ) {
+        return ApiResponse.success(uiNlService.listTaskSteps(id, phase));
     }
 
     @GetMapping("/ui-nl-steps/{stepId}")
-    public ApiResponse<UiNlDtos.StepItem> detailStep(@PathVariable Long stepId) {
-        return ApiResponse.success(uiNlService.detailStep(stepId));
+    public ApiResponse<UiNlDtos.StepItem> detailStep(
+            @PathVariable Long stepId,
+            @RequestParam(required = false) String phase
+    ) {
+        return ApiResponse.success(uiNlService.detailStep(stepId, phase));
+    }
+
+    @PutMapping("/ui-nl-plan-steps/{stepId}")
+    public ApiResponse<UiNlDtos.StepItem> updatePlanStep(
+            @PathVariable Long stepId,
+            @Valid @RequestBody UiNlDtos.UpdatePlanStepRequest body
+    ) {
+        return ApiResponse.success(uiNlService.updatePlanStep(stepId, body));
+    }
+
+    @GetMapping("/ui-nl-exec-steps/{stepId}/screenshot")
+    public ResponseEntity<byte[]> execStepScreenshot(@PathVariable Long stepId) {
+        return uiNlService.execStepScreenshot(stepId);
     }
 
     @GetMapping("/ui-nl-reports")
@@ -161,6 +186,16 @@ public class UiNlController {
     @GetMapping("/ui-nl-reports/{id}")
     public ApiResponse<UiNlDtos.ReportItem> detailReport(@PathVariable Long id) {
         return ApiResponse.success(uiNlService.detailReport(id));
+    }
+
+    @GetMapping("/ui-nl-reports/{id}/html")
+    public ResponseEntity<Resource> downloadReportHtml(@PathVariable Long id) {
+        UiNlService.ReportHtmlPayload payload = uiNlService.reportHtml(id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.TEXT_HTML)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.inline().filename(payload.fileName()).build().toString())
+                .body(payload.resource());
     }
 
     private Long loginUserId(HttpServletRequest request) {

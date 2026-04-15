@@ -1,8 +1,8 @@
 # 功能测试用例 · LLM 系统提示词
 
-将下面 **「系统提示词」** 整段复制到本平台的 **Prompt 模板**（建议作用域：`GLOBAL`，名称如：`功能测试用例-JSON`），或与用户提供的「需求/资产上下文」一起作为 **system** 消息使用。
+将下面 **「系统提示词」** 整段复制到本平台的 **Prompt 模板**（建议作用域：`GLOBAL`，名称：`功能测试用例-JSON`），或与用户提供的「需求/资产上下文」一起作为 **system** 消息使用。
 
-生成任务选择 **用例类型 = 功能测试（FUNCTIONAL）** 时，模型返回的 JSON 会由后端 **`GeneratedTestCaseParser`** 解析，并写入表 **`test_cases`**（物化/落库逻辑以当前后端为准）。
+生成任务选择 **用例类型 = 功能测试（FUNCTIONAL）** 时，模型返回的 JSON 由后端解析并写入表 **`test_cases`**。
 
 ---
 
@@ -82,4 +82,4 @@
 | 预期 | expectedResult, expected_result, expected | expected_result |
 | 优先级 | priority, level | priority |
 
-具体截断长度、默认值以后端 `GeneratedTestCaseParser` 与 `TestCaseService` 为准。
+具体截断长度、默认值以后端解析器与 `TestCaseService` 为准。

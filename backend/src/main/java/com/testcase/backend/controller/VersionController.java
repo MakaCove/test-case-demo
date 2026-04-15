@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.testcase.backend.common.ApiResponse;
+import com.testcase.backend.common.StatusConstants;
 import com.testcase.backend.domain.ProjectVersion;
 import com.testcase.backend.dto.PagedResult;
 import com.testcase.backend.dto.VersionDtos;
@@ -65,7 +66,7 @@ public class VersionController {
         entity.setVersionNo(request.versionNo());
         entity.setName(request.name());
         entity.setDescription(request.description());
-        entity.setStatus("DRAFT");
+        entity.setStatus(StatusConstants.Version.DRAFT);
         entity.setCreatedBy(1L);
         entity.setUpdatedBy(1L);
         entity.setCreatedAt(now);
@@ -233,7 +234,7 @@ public class VersionController {
         if (entity == null || entity.getIsDeleted() == 1) {
             throw new IllegalArgumentException("version not found");
         }
-        entity.setStatus("PUBLISHED");
+        entity.setStatus(StatusConstants.Version.PUBLISHED);
         entity.setUpdatedBy(1L);
         entity.setUpdatedAt(now);
         projectVersionMapper.updateById(entity);

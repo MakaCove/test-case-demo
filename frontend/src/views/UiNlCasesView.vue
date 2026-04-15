@@ -3,6 +3,7 @@ import { computed, inject, onMounted, ref, type Ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { api, type Project, type UiNlCase, type Version } from '../api/api'
 import { formatDateTime } from '../utils/formatDateTime'
+import { SWITCH_STATUS, statusLabel as dictStatusLabel, statusTagType as dictStatusTagType } from '../utils/statusDictionary'
 
 const tableDensity = inject<Ref<'default' | 'small'>>('tableDensity', ref('default'))
 
@@ -193,11 +194,11 @@ function versionLabel(id: number) {
 }
 
 function statusLabel(status?: string) {
-  if (!status) return '—'
-  const s = status.trim().toUpperCase()
-  if (s === 'ENABLED') return '启用'
-  if (s === 'DISABLED') return '停用'
-  return status
+  return dictStatusLabel(SWITCH_STATUS, status, '—')
+}
+
+function statusTagType(status?: string) {
+  return dictStatusTagType(SWITCH_STATUS, status, 'info')
 }
 
 onMounted(async () => {
@@ -248,7 +249,7 @@ onMounted(async () => {
         </el-table-column>
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="row.status === 'ENABLED' ? 'success' : 'info'" effect="light">
+            <el-tag :type="statusTagType(row.status)" effect="light">
               {{ statusLabel(row.status) }}
             </el-tag>
           </template>
@@ -277,7 +278,7 @@ onMounted(async () => {
           v-model:page-size="pageSize"
           :total="total"
           :page-sizes="[10, 20, 50]"
-          layout="total, sizes, prev, pager, next"
+          layout="total, sizes, prev, pager, next, jumper"
           @current-change="loadRecords"
           @size-change="() => { pageNo = 1; loadRecords() }"
         />

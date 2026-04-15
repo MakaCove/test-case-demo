@@ -18,13 +18,25 @@ export type Project = {
   updatedAt?: string
 }
 
+// 统一状态枚举：数据库/接口英文枚举，展示层在 statusDictionary 中转中文。
+export type SwitchStatus = 'ENABLED' | 'DISABLED'
+export type VersionStatus = 'DRAFT' | 'PUBLISHED'
+export type CaseExecutionStatus = 'NOT_EXECUTED' | 'EXECUTED' | 'FAILED'
+export type CaseReviewStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+export type GenerationTaskStatus = 'PENDING' | 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
+export type ExportStatus = 'RUNNING' | 'SUCCESS' | 'FAILED'
+export type UiNlTaskPlanStatus = 'PENDING' | 'QUEUED' | 'PLANNING' | 'READY' | 'FAILED' | 'INTERRUPTED' | 'CANCELLED'
+export type UiNlTaskExecStatus = 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
+export type UiNlStepStatus = 'GENERATED' | 'EDITED' | 'PENDING' | 'SUCCESS' | 'FAILED' | 'SKIPPED'
+export type UiNlReportStatus = 'SUCCESS' | 'FAILED' | 'CANCELLED'
+
 export type Version = {
   id: number
   projectId: number
   versionNo: string
   name?: string
   description?: string
-  status: string
+  status: VersionStatus | string
   deleted: boolean
   createdAt?: string
   updatedAt?: string
@@ -65,7 +77,7 @@ export type GenerationTask = {
   projectId: number
   versionId: number
   taskNo: string
-  status: 'PENDING' | 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
+  status: GenerationTaskStatus
   /** 当为 true 时，系统正在自动推进队列（手动启动/重试之后） */
   queueAutoEnabled?: boolean
   queueNo?: number
@@ -97,7 +109,7 @@ export type UiNlCase = {
   targetEnv?: string
   baseUrl?: string
   credentialRef?: string
-  status: string
+  status: SwitchStatus | string
   tagsJson?: string
   createdAt?: string
   updatedAt?: string
@@ -109,11 +121,17 @@ export type UiNlTask = {
   versionId: number
   uiNlCaseId: number
   taskNo: string
-  status: string
+  status: UiNlTaskPlanStatus | string
+  /** 最近浏览器执行：RUNNING/COMPLETED/FAILED/CANCELLED；与 status（步骤生成）分离 */
+  lastExecStatus?: UiNlTaskExecStatus | string | null
   submittedBy: number
   submittedAt?: string
-  startedAt?: string
-  finishedAt?: string
+  /** 步骤生成（LLM规划） */
+  planStartedAt?: string
+  planFinishedAt?: string
+  /** 最近一轮浏览器执行 */
+  execStartedAt?: string
+  execFinishedAt?: string
   runnerRunId?: string
   modelConfigId?: number
   promptTemplateId?: number
@@ -121,7 +139,6 @@ export type UiNlTask = {
   browserName?: string
   modelKey?: string
   timeoutSeconds?: number
-  payloadJson?: string
   resultSummary?: string
   interruptReason?: string
   errorMessage?: string
@@ -138,13 +155,14 @@ export type UiNlStep = {
   targetJson?: string
   inputValue?: string
   expectJson?: string
-  status: string
+  status: UiNlStepStatus | string
   durationMs?: number
   errorMessage?: string
   screenshotPath?: string
   startedAt?: string
   finishedAt?: string
   rawLog?: string
+  phase?: 'PLAN' | 'EXEC' | string
 }
 
 export type UiNlReport = {
@@ -153,17 +171,18 @@ export type UiNlReport = {
   taskId: number
   projectId: number
   versionId: number
-  status: string
+  status: UiNlReportStatus | string
   totalSteps: number
   passedSteps: number
   failedSteps: number
   summary?: string
-  reportJson?: string
   artifactsJson?: string
   startedAt?: string
   finishedAt?: string
   createdAt?: string
   updatedAt?: string
+  reportFilePath?: string
+  reportGeneratedAt?: string
 }
 
 export type TestCase = {
@@ -180,8 +199,8 @@ export type TestCase = {
   testData?: string
   expectedResult: string
   priority: 'P0' | 'P1' | 'P2' | 'P3' | string
-  executionStatus: string
-  reviewStatus: string
+  executionStatus: CaseExecutionStatus | string
+  reviewStatus: CaseReviewStatus | string
   reviewComment?: string
   lastExecutedAt?: string
   reviewedAt?: string
@@ -213,8 +232,8 @@ export type ApiTestCase = {
   expectedJson: string
   assertionsJson: string
   priority: string
-  executionStatus: string
-  reviewStatus: string
+  executionStatus: CaseExecutionStatus | string
+  reviewStatus: CaseReviewStatus | string
   reviewComment?: string
   lastExecutedAt?: string
   reviewedAt?: string
@@ -266,7 +285,7 @@ export type ExportRecord = {
   versionId: number
   format: string
   scope: string
-  status: 'QUEUED' | 'RUNNING' | 'SUCCESS' | 'FAILED' | string
+  status: ExportStatus | string
   requestJson?: string
   /** 后端解析：如「功能用例、接口用例」 */
   exportContent?: string
@@ -963,7 +982,6 @@ export const api = {
     browserName?: string
     modelKey?: string
     timeoutSeconds?: number
-    payloadJson?: string
   }) {
     return request<UiNlTask>('POST', '/ui-nl-tasks', payload)
   },
@@ -974,6 +992,7 @@ export const api = {
     versionId?: number
     status?: string
     caseTitle?: string
+    lastExecStatus?: string
   }) {
     const q = new URLSearchParams({
       pageNo: String(params?.pageNo ?? 1),
@@ -983,6 +1002,7 @@ export const api = {
     if (params?.projectId) q.set('projectId', String(params.projectId))
     if (params?.versionId) q.set('versionId', String(params.versionId))
     if (params?.caseTitle) q.set('caseTitle', String(params.caseTitle))
+    if (params?.lastExecStatus) q.set('lastExecStatus', String(params.lastExecStatus))
     return request<PagedResult<UiNlTask>>('GET', `/ui-nl-tasks?${q.toString()}`)
   },
   getUiNlTask(id: number) {
@@ -998,7 +1018,6 @@ export const api = {
       browserName?: string
       modelKey?: string
       timeoutSeconds?: number
-      payloadJson?: string
     },
   ) {
     return request<UiNlTask>('PUT', `/ui-nl-tasks/${id}`, payload)
@@ -1012,14 +1031,38 @@ export const api = {
   interruptUiNlTask(id: number, reason?: string) {
     return request<UiNlTask>('POST', `/ui-nl-tasks/${id}/interrupt`, { reason })
   },
+  cancelUiNlTask(id: number, reason?: string) {
+    return request<null>('POST', `/ui-nl-tasks/${id}/cancel`, { reason })
+  },
   runUiNlTask(id: number) {
     return request<UiNlTask>('POST', `/ui-nl-tasks/${id}/run`)
   },
-  getUiNlTaskSteps(taskId: number) {
-    return request<UiNlStep[]>('GET', `/ui-nl-tasks/${taskId}/steps`)
+  getUiNlTaskSteps(taskId: number, phase?: 'PLAN' | 'EXEC') {
+    const q = new URLSearchParams()
+    if (phase) q.set('phase', phase)
+    const suffix = q.toString() ? `?${q.toString()}` : ''
+    return request<UiNlStep[]>('GET', `/ui-nl-tasks/${taskId}/steps${suffix}`)
   },
-  getUiNlStep(stepId: number) {
-    return request<UiNlStep>('GET', `/ui-nl-steps/${stepId}`)
+  getUiNlStep(stepId: number, phase?: 'PLAN' | 'EXEC') {
+    const q = new URLSearchParams()
+    if (phase) q.set('phase', phase)
+    const suffix = q.toString() ? `?${q.toString()}` : ''
+    return request<UiNlStep>('GET', `/ui-nl-steps/${stepId}${suffix}`)
+  },
+  updateUiNlPlanStep(
+    stepId: number,
+    payload: {
+      stepTitle: string
+      actionType?: string
+      inputValue: string
+      expectJson?: string
+    },
+  ) {
+    return request<UiNlStep>('PUT', `/ui-nl-plan-steps/${stepId}`, payload)
+  },
+  async getUiNlExecStepScreenshotBlob(stepId: number) {
+    const response = await http.get(`/ui-nl-exec-steps/${stepId}/screenshot`, { responseType: 'blob' })
+    return response.data as Blob
   },
   getUiNlReports(params?: {
     pageNo?: number
@@ -1039,5 +1082,9 @@ export const api = {
   },
   getUiNlReport(id: number) {
     return request<UiNlReport>('GET', `/ui-nl-reports/${id}`)
+  },
+  async downloadUiNlReportHtml(id: number) {
+    const response = await http.get(`/ui-nl-reports/${id}/html`, { responseType: 'blob' })
+    return response.data as Blob
   },
 }

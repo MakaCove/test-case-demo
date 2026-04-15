@@ -528,15 +528,15 @@ watch(
             <el-option v-for="v in versions" :key="v.id" :label="`${v.name || '未命名版本'}（${v.versionNo}）`" :value="String(v.id)" />
           </el-select>
           <el-input v-model="titleKeyword" placeholder="标题" clearable style="width: 200px" />
-          <el-select v-model="reviewStatus" clearable placeholder="评审状态" style="width: 150px">
-            <el-option label="待评审" value="PENDING" />
-            <el-option label="已通过" value="APPROVED" />
-            <el-option label="已驳回" value="REJECTED" />
-          </el-select>
           <el-select v-model="executionStatus" clearable placeholder="执行状态" style="width: 150px">
             <el-option label="未执行" value="NOT_EXECUTED" />
             <el-option label="已执行" value="EXECUTED" />
             <el-option label="执行失败" value="FAILED" />
+          </el-select>
+          <el-select v-model="reviewStatus" clearable placeholder="评审状态" style="width: 150px">
+            <el-option label="待评审" value="PENDING" />
+            <el-option label="已通过" value="APPROVED" />
+            <el-option label="已驳回" value="REJECTED" />
           </el-select>
           <el-select v-model="priority" clearable placeholder="优先级" style="width: 120px">
             <el-option label="P0" value="P0" />
@@ -564,6 +564,11 @@ watch(
           <el-table-column prop="moduleName" label="模块" min-width="120" />
           <el-table-column prop="featureName" label="功能" min-width="140" />
           <el-table-column prop="title" label="标题" min-width="240" />
+          <el-table-column label="项目 / 版本" min-width="260" show-overflow-tooltip>
+            <template #default="{ row }">
+              {{ projectDisplay(row) }} · {{ versionDisplay(row) }}
+            </template>
+          </el-table-column>
           <el-table-column label="优先级" width="100">
             <template #default="{ row }">
               <el-tag size="small" effect="dark" :type="priorityTagType(row.priority)">
@@ -585,17 +590,6 @@ watch(
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="创建时间" min-width="170">
-            <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
-          </el-table-column>
-          <el-table-column label="更新时间" min-width="170">
-            <template #default="{ row }">{{ formatDateTime(row.updatedAt) }}</template>
-          </el-table-column>
-          <el-table-column label="项目 / 版本" min-width="260" show-overflow-tooltip>
-            <template #default="{ row }">
-              {{ projectDisplay(row) }} · {{ versionDisplay(row) }}
-            </template>
-          </el-table-column>
           <el-table-column label="需求资产" min-width="300" show-overflow-tooltip>
             <template #default="{ row }">
               <el-tooltip v-if="(row.requirementAssets || []).length > 2" placement="top">
@@ -606,6 +600,12 @@ watch(
               </el-tooltip>
               <span v-else>{{ requirementAssetsSummary(row) }}</span>
             </template>
+          </el-table-column>
+          <el-table-column label="创建时间" min-width="170">
+            <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
+          </el-table-column>
+          <el-table-column label="更新时间" min-width="170">
+            <template #default="{ row }">{{ formatDateTime(row.updatedAt) }}</template>
           </el-table-column>
           <el-table-column label="操作" width="280" fixed="right">
             <template #default="{ row }">

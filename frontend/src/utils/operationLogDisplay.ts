@@ -21,6 +21,9 @@ export const OBJECT_TYPE_LABELS: Record<string, string> = {
   EXPORT: '导出',
   MODEL_CONFIG: '模型配置',
   PROMPT_TEMPLATE: 'Prompt 模板',
+  UI_NL_CASE: 'UI自然语言用例',
+  UI_NL_TASK: 'UI自然语言任务',
+  UI_NL_PLAN_STEP: 'UI规划步骤',
 }
 
 export const ACTION_LABELS: Record<string, string> = {
@@ -48,6 +51,11 @@ export const ACTION_LABELS: Record<string, string> = {
   STATUS_UPDATE: '状态更新',
   MATERIALIZE_TEST_CASES: '生成功能用例',
   MATERIALIZE_API_TEST_CASES: '生成接口用例',
+  ENQUEUE_PLAN: '入队规划',
+  READY: '规划就绪',
+  RUN: '开始执行',
+  EXEC_COMPLETED: '执行完成',
+  EXEC_FAILED: '执行失败',
 }
 
 export function objectTypeLabel(code: string) {
@@ -128,6 +136,16 @@ function nameFromSnapshot(objectType: string, snap: Record<string, unknown>): st
       if (n && vs) return `${n}（v${vs}）`
       return n
     }
+    case 'UI_NL_CASE':
+      return strVal(snap.title) || strVal(snap.caseNo)
+    case 'UI_NL_TASK':
+      return strVal(snap.taskNo)
+    case 'UI_NL_PLAN_STEP': {
+      const st = strVal(snap.stepTitle)
+      const sn = snap.stepNo != null ? String(snap.stepNo) : null
+      if (st && sn) return `步骤 ${sn} · ${st}`
+      return st || (sn ? `步骤 ${sn}` : null)
+    }
     default:
       return null
   }
@@ -144,6 +162,7 @@ function nameFromSnapshotGeneric(snap: Record<string, unknown>): string | null {
     'code',
     'relationCode',
     'assetCode',
+    'stepTitle',
   ] as const
   for (const k of keys) {
     const v = strVal(snap[k])
@@ -152,15 +171,19 @@ function nameFromSnapshotGeneric(snap: Record<string, unknown>): string | null {
   return null
 }
 
-export function operationObjectDisplay(row: OperationLogRow) {
-  const typeZh = objectTypeLabel(row.objectType)
+/** 从快照解析出的业务名称（不含类型、不含数据库 ID） */
+export function operationObjectResolvedName(row: OperationLogRow): string | null {
   const after = parseSnapshot(row.afterJson)
   const before = parseSnapshot(row.beforeJson)
   const snap = after ?? before
-  let name: string | null = null
-  if (snap) {
-    name = nameFromSnapshot(row.objectType, snap) ?? nameFromSnapshotGeneric(snap)
-  }
+  if (!snap) return null
+  return nameFromSnapshot(row.objectType, snap) ?? nameFromSnapshotGeneric(snap)
+}
+
+/** 列表/看板用的一行摘要（类型：名称 · id） */
+export function operationObjectDisplay(row: OperationLogRow) {
+  const typeZh = objectTypeLabel(row.objectType)
+  const name = operationObjectResolvedName(row)
   if (name) {
     const max = 100
     const short = name.length > max ? `${name.slice(0, max)}…` : name

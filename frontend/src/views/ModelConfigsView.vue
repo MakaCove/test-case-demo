@@ -3,6 +3,7 @@ import { inject, nextTick, onMounted, ref, type Ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { api } from '../api/api'
 import { formatDateTime } from '../utils/formatDateTime'
+import { SWITCH_STATUS, statusLabel as dictStatusLabel, statusTagType as dictStatusTagType } from '../utils/statusDictionary'
 
 const tableDensity = inject<Ref<'default' | 'small'>>('tableDensity', ref('default'))
 
@@ -127,6 +128,14 @@ async function toggleStatus(row: ModelConfig) {
   }
 }
 
+function switchStatusLabel(v?: string) {
+  return dictStatusLabel(SWITCH_STATUS, v, '—')
+}
+
+function switchStatusTagType(v?: string) {
+  return dictStatusTagType(SWITCH_STATUS, v, 'info')
+}
+
 async function testConnection(row: ModelConfig) {
   if (testingConnectionId.value !== null) {
     return
@@ -197,13 +206,17 @@ onMounted(loadList)
           <el-table-column prop="provider" label="Provider" width="140" />
           <el-table-column prop="modelKey" label="Model" min-width="180" />
           <el-table-column prop="baseUrl" label="Base URL" min-width="220" />
+          <el-table-column label="状态" width="120">
+            <template #default="{ row }">
+              <el-tag size="small" :type="switchStatusTagType(row.status)">{{ switchStatusLabel(row.status) }}</el-tag>
+            </template>
+          </el-table-column>
           <el-table-column label="创建时间" min-width="170">
             <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
           </el-table-column>
           <el-table-column label="更新时间" min-width="170">
             <template #default="{ row }">{{ formatDateTime(row.updatedAt) }}</template>
           </el-table-column>
-          <el-table-column prop="status" label="状态" width="120" />
           <el-table-column label="操作" min-width="300" width="300" fixed="right" align="center">
             <template #default="{ row }">
               <div class="table-ops">

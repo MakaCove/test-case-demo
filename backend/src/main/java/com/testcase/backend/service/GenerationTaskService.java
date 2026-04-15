@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.testcase.backend.common.StatusConstants;
 import com.testcase.backend.dto.GenerationTaskDtos;
 import com.testcase.backend.dto.PagedResult;
 import com.testcase.backend.entity.GenerationTaskEntity;
@@ -36,13 +37,13 @@ import java.util.stream.Collectors;
 public class GenerationTaskService {
     private static final Logger log = LoggerFactory.getLogger(GenerationTaskService.class);
 
-    public static final String STATUS_QUEUED = "QUEUED";
+    public static final String STATUS_QUEUED = StatusConstants.GenerationTask.QUEUED;
     /** 新建后不进入自动队列；需要点击「启动」后才进入 QUEUED。 */
-    public static final String STATUS_PENDING = "PENDING";
-    public static final String STATUS_RUNNING = "RUNNING";
-    public static final String STATUS_COMPLETED = "COMPLETED";
-    public static final String STATUS_FAILED = "FAILED";
-    public static final String STATUS_CANCELLED = "CANCELLED";
+    public static final String STATUS_PENDING = StatusConstants.GenerationTask.PENDING;
+    public static final String STATUS_RUNNING = StatusConstants.GenerationTask.RUNNING;
+    public static final String STATUS_COMPLETED = StatusConstants.GenerationTask.COMPLETED;
+    public static final String STATUS_FAILED = StatusConstants.GenerationTask.FAILED;
+    public static final String STATUS_CANCELLED = StatusConstants.GenerationTask.CANCELLED;
 
     private final GenerationTaskMapper generationTaskMapper;
     private final GenerationTaskRefMapper generationTaskRefMapper;

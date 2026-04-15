@@ -3,6 +3,7 @@ import { inject, nextTick, onMounted, ref, watch, type Ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { api } from '../api/api'
 import { formatDateTime } from '../utils/formatDateTime'
+import { SWITCH_STATUS, statusLabel as dictStatusLabel, statusTagType as dictStatusTagType } from '../utils/statusDictionary'
 
 const tableDensity = inject<Ref<'default' | 'small'>>('tableDensity', ref('default'))
 
@@ -40,17 +41,16 @@ const SCOPE_TYPE_LABELS: Record<string, string> = {
   PROJECT: '项目',
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  ENABLED: '启用',
-  DISABLED: '停用',
-}
-
 function scopeTypeLabel(s: string) {
   return SCOPE_TYPE_LABELS[s] || s
 }
 
 function statusLabel(s: string) {
-  return STATUS_LABELS[s] || s
+  return dictStatusLabel(SWITCH_STATUS, s, '—')
+}
+
+function statusTagType(s: string) {
+  return dictStatusTagType(SWITCH_STATUS, s, 'info')
 }
 
 function projectLabel(id?: number) {
@@ -252,7 +252,9 @@ onMounted(() => {
             <template #default="{ row }">{{ formatDateTime(row.updatedAt) }}</template>
           </el-table-column>
           <el-table-column prop="status" label="状态" width="120">
-            <template #default="{ row }">{{ statusLabel(row.status) }}</template>
+            <template #default="{ row }">
+              <el-tag size="small" :type="statusTagType(row.status)">{{ statusLabel(row.status) }}</el-tag>
+            </template>
           </el-table-column>
           <el-table-column label="操作" width="200" fixed="right">
             <template #default="{ row }">

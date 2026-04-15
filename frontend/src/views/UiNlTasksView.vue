@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { api, type Project, type UiNlCase, type UiNlTask, type Version } from '../api/api'
 import { formatDateTime } from '../utils/formatDateTime'
+import { UI_NL_TASK_PLAN_STATUS, statusLabel as dictStatusLabel } from '../utils/statusDictionary'
 
 const tableDensity = inject<Ref<'default' | 'small'>>('tableDensity', ref('default'))
 const router = useRouter()
@@ -93,18 +94,7 @@ function promptTemplateLabel(id?: number) {
 }
 
 function statusLabel(status?: string) {
-  if (!status) return '—'
-  const s = status.trim().toUpperCase()
-  if (s === 'PENDING') return '待启动'
-  if (s === 'QUEUED') return '排队'
-  if (s === 'PLANNING') return '生成中'
-  if (s === 'READY') return '待执行'
-  if (s === 'RUNNING') return '执行中'
-  if (s === 'COMPLETED') return '完成'
-  if (s === 'FAILED') return '失败'
-  if (s === 'INTERRUPTED') return '中断'
-  if (s === 'CANCELLED') return '取消'
-  return status
+  return dictStatusLabel(UI_NL_TASK_PLAN_STATUS, status, '—')
 }
 
 watch(projectId, () => {
@@ -309,11 +299,12 @@ onMounted(async () => {
         </el-select>
         <el-select v-model="status" clearable placeholder="状态" style="width: 160px">
           <el-option label="待启动" value="PENDING" />
-          <el-option label="排队" value="QUEUED" />
-          <el-option label="生成中" value="PLANNING" />
-          <el-option label="待执行" value="READY" />
-          <el-option label="失败" value="FAILED" />
-          <el-option label="中断" value="INTERRUPTED" />
+          <el-option label="排队中" value="QUEUED" />
+          <el-option label="规划中" value="PLANNING" />
+          <el-option label="步骤就绪" value="READY" />
+          <el-option label="规划失败" value="FAILED" />
+          <el-option label="规划中断" value="INTERRUPTED" />
+          <el-option label="已取消" value="CANCELLED" />
         </el-select>
         <div class="query-actions">
           <el-button type="primary" @click="() => { pageNo = 1; loadRecords() }">查询</el-button>
@@ -326,7 +317,7 @@ onMounted(async () => {
     <el-card class="table-card">
       <el-table :data="records" :size="tableDensity" border stripe v-loading="loading" height="100%">
         <el-table-column prop="taskNo" label="任务号" min-width="140" />
-        <el-table-column label="状态" width="110">
+        <el-table-column label="步骤生成" width="110">
           <template #default="{ row }">{{ statusLabel(row.status) }}</template>
         </el-table-column>
         <el-table-column prop="browserName" label="浏览器" width="100" />
@@ -378,7 +369,7 @@ onMounted(async () => {
           v-model:page-size="pageSize"
           :total="total"
           :page-sizes="[10, 20, 50]"
-          layout="total, sizes, prev, pager, next"
+          layout="total, sizes, prev, pager, next, jumper"
           @current-change="loadRecords"
           @size-change="() => { pageNo = 1; loadRecords() }"
         />

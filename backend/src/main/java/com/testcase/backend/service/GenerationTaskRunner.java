@@ -24,7 +24,9 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component
@@ -121,8 +123,10 @@ public class GenerationTaskRunner {
                 }
 
                 List<String> refAssetRelationCodes = extractReferenceAssetRelationCodes(latest.getPayloadJson());
-                String requirementText = buildRequirementTextForModel(latest.getVersionId(), refAssetRelationCodes);
-                List<String> imageDataUrls = loadPrototypeImageDataUrls(latest.getVersionId(), refAssetRelationCodes);
+                // 生成上下文来源：当前版本 + payload.referenceVersionIds（若有）
+                List<Long> contextVersionIds = resolveContextVersionIds(latest);
+                String requirementText = buildRequirementTextForModel(contextVersionIds, refAssetRelationCodes);
+                List<String> imageDataUrls = loadPrototypeImageDataUrls(contextVersionIds, refAssetRelationCodes);
 
                 String prompt = tpl.getContent();
                 ModelClient.ModelChatInput chatInput = new ModelClient.ModelChatInput(prompt, requirementText, imageDataUrls);
@@ -260,15 +264,55 @@ public class GenerationTaskRunner {
         }
     }
 
+    private List<Long> extractReferenceVersionIds(String payloadJson) {
+        if (!StringUtils.hasText(payloadJson)) {
+            return List.of();
+        }
+        try {
+            JsonNode node = objectMapper.readTree(payloadJson);
+            JsonNode arr = node == null ? null : node.get("referenceVersionIds");
+            if (arr == null || !arr.isArray()) {
+                return List.of();
+            }
+            List<Long> out = new ArrayList<>();
+            for (JsonNode item : arr) {
+                if (item == null || item.isNull()) continue;
+                long v = item.asLong(0L);
+                if (v > 0L) {
+                    out.add(v);
+                }
+            }
+            return out;
+        } catch (Exception ignore) {
+            return List.of();
+        }
+    }
+
+    private List<Long> resolveContextVersionIds(GenerationTaskEntity task) {
+        Set<Long> merged = new LinkedHashSet<>();
+        if (task.getVersionId() != null && task.getVersionId() > 0) {
+            merged.add(task.getVersionId());
+        }
+        for (Long refId : extractReferenceVersionIds(task.getPayloadJson())) {
+            if (refId != null && refId > 0) {
+                merged.add(refId);
+            }
+        }
+        return new ArrayList<>(merged);
+    }
+
     /**
      * 组装给模型的文字上下文：手工需求描述 + 需求文档已提取正文；若存在原型图则文字中提示已附图。
      */
-    private String buildRequirementTextForModel(Long versionId, List<String> assetRelationCodes) {
+    private String buildRequirementTextForModel(List<Long> versionIds, List<String> assetRelationCodes) {
         StringBuilder sb = new StringBuilder();
+        if (versionIds == null || versionIds.isEmpty()) {
+            return null;
+        }
 
         LambdaQueryWrapper<RequirementAssetEntity> textWrapper = new LambdaQueryWrapper<RequirementAssetEntity>()
                 .eq(RequirementAssetEntity::getIsDeleted, 0)
-                .eq(RequirementAssetEntity::getVersionId, versionId)
+                .in(RequirementAssetEntity::getVersionId, versionIds)
                 .eq(RequirementAssetEntity::getAssetType, "TEXT");
         if (assetRelationCodes != null && !assetRelationCodes.isEmpty()) {
             textWrapper.in(RequirementAssetEntity::getRelationCode, assetRelationCodes);
@@ -282,7 +326,7 @@ public class GenerationTaskRunner {
 
         LambdaQueryWrapper<RequirementAssetEntity> docsWrapper = new LambdaQueryWrapper<RequirementAssetEntity>()
                 .eq(RequirementAssetEntity::getIsDeleted, 0)
-                .eq(RequirementAssetEntity::getVersionId, versionId)
+                .in(RequirementAssetEntity::getVersionId, versionIds)
                 .eq(RequirementAssetEntity::getAssetType, "FILE");
         if (assetRelationCodes != null && !assetRelationCodes.isEmpty()) {
             docsWrapper.in(RequirementAssetEntity::getRelationCode, assetRelationCodes);
@@ -301,7 +345,7 @@ public class GenerationTaskRunner {
 
         LambdaQueryWrapper<RequirementAssetEntity> protoCountWrapper = new LambdaQueryWrapper<RequirementAssetEntity>()
                 .eq(RequirementAssetEntity::getIsDeleted, 0)
-                .eq(RequirementAssetEntity::getVersionId, versionId)
+                .in(RequirementAssetEntity::getVersionId, versionIds)
                 .eq(RequirementAssetEntity::getAssetType, "PROTOTYPE");
         if (assetRelationCodes != null && !assetRelationCodes.isEmpty()) {
             protoCountWrapper.in(RequirementAssetEntity::getRelationCode, assetRelationCodes);
@@ -315,10 +359,13 @@ public class GenerationTaskRunner {
         return result.isEmpty() ? null : result;
     }
 
-    private List<String> loadPrototypeImageDataUrls(Long versionId, List<String> assetRelationCodes) throws IOException {
+    private List<String> loadPrototypeImageDataUrls(List<Long> versionIds, List<String> assetRelationCodes) throws IOException {
+        if (versionIds == null || versionIds.isEmpty()) {
+            return List.of();
+        }
         LambdaQueryWrapper<RequirementAssetEntity> protoWrapper = new LambdaQueryWrapper<RequirementAssetEntity>()
                 .eq(RequirementAssetEntity::getIsDeleted, 0)
-                .eq(RequirementAssetEntity::getVersionId, versionId)
+                .in(RequirementAssetEntity::getVersionId, versionIds)
                 .eq(RequirementAssetEntity::getAssetType, "PROTOTYPE");
         if (assetRelationCodes != null && !assetRelationCodes.isEmpty()) {
             protoWrapper.in(RequirementAssetEntity::getRelationCode, assetRelationCodes);

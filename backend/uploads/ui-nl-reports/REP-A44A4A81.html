@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>UI-NL 测试报告 REP-A44A4A81</title><style>body{font-family:Segoe UI,Arial,sans-serif;background:#f6f8fb;color:#1f2937;margin:0;padding:20px;}.card{background:#fff;border-radius:10px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);}.title{font-size:22px;font-weight:700;margin-bottom:8px;}.meta{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:8px;}.k{color:#6b7280;font-size:12px}.v{font-size:14px;font-weight:600}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #e5e7eb;padding:8px;vertical-align:top;font-size:12px;}th{background:#f3f4f6;text-align:left}.ok{color:#166534}.bad{color:#991b1b}img{max-width:260px;max-height:160px;border:1px solid #ddd;border-radius:4px}pre{white-space:pre-wrap;word-break:break-word;margin:0;}</style></head><body><div class="card"><div class="title">UI-NL 测试报告</div><div class="meta"><div><div class="k">报告编号</div><div class="v">REP-A44A4A81</div></div><div><div class="k">任务号</div><div class="v">UIT-05068607</div></div><div><div class="k">结论</div><div class="v"><span class="ok">通过</span></div></div><div><div class="k">状态</div><div class="v">SUCCESS</div></div><div><div class="k">开始时间</div><div class="v">2026-04-15 10:48:23</div></div><div><div class="k">结束时间</div><div class="v">2026-04-15 10:52:18</div></div><div><div class="k">耗时</div><div class="v">235183 ms</div></div><div><div class="k">用例标题</div><div class="v">百度Test</div></div></div></div><div class="card"><h3>执行概览</h3><div class="meta"><div><div class="k">总步骤</div><div class="v">8</div></div><div><div class="k">成功</div><div class="v">7</div></div><div><div class="k">失败</div><div class="v">1</div></div><div><div class="k">摘要</div><div class="v">所有步骤已成功完成：
+
+✓ 步骤1：成功打开 https://www.baidu.com/
+✓ 步骤2：定位到搜索输入框
+✓ 步骤3：在搜索框中输入&#39;TesterHome&#39;
+✓ 步骤4：点击&#39;百度一下&#39;搜索按钮
+✓ 步骤5：等待搜索结果加载完成
+✓ 步骤6：找到第一个 TesterHome 官网链接
+✓ 步骤7：点击第一个搜索结果进入官网
+✓ 步骤8：验证成功 - 当前页面 URL 为 https://testerhome.com/，页面标题为&#39;测试之家&#39;，页面内容显示&#39;测试之家 (TesterHome)&#39;，确认已成功进入 TesterHome 官网。</div></div></div></div><div class="card"><h3>执行步骤详情</h3><table><thead><tr><th>#</th><th>标题</th><th>动作</th><th>状态</th><th>操作内容</th><th>预期</th><th>耗时(ms)</th><th>截图</th><th>错误</th></tr></thead><tbody><tr><td>1</td><td>Agent步骤1 (ActionModel)</td><td>ActionModel</td><td>SUCCESS</td><td>Navigate to https://www.baidu.com/ to complete Step 1.</td><td>{&quot;expected_result&quot;: &quot;百度首页加载成功&quot;}</td><td>18213</td><td>-</td><td>-</td></tr><tr><td>2</td><td>Agent步骤2 (ActionModel)</td><td>ActionModel</td><td>SUCCESS</td><td>Step 2-3: Input &#39;TesterHome&#39; into the search box (element index 21 in shadow DOM).</td><td>{&quot;expected_result&quot;: &quot;搜索框元素可见&quot;}</td><td>13690</td><td>shots/002__._</td><td>-</td></tr><tr><td>3</td><td>Agent步骤3 (ActionModel)</td><td>ActionModel</td><td>SUCCESS</td><td>Step 4: Click the &#39;百度一下&#39; search button (element index 9) to initiate the search.</td><td>{&quot;expected_result&quot;: &quot;输入框内显示&#39;TesterHome&#39;&quot;}</td><td>18819</td><td>shots/003__._</td><td>-</td></tr><tr><td>4</td><td>Agent步骤4 (ActionModel)</td><td>ActionModel</td><td>SUCCESS</td><td>Wait for the search results page to fully load, then identify the first TesterHome official website link in the search results.</td><td>{&quot;expected_result&quot;: &quot;页面开始跳转至搜索结果页&quot;}</td><td>20823</td><td>shots/004__._</td><td>-</td></tr><tr><td>5</td><td>Agent步骤5 (ActionModel)</td><td>ActionModel</td><td>SUCCESS</td><td>Click the first TesterHome official website link (element 3608) to navigate to the official website.</td><td>{&quot;expected_result&quot;: &quot;搜索结果页面完全展示&quot;}</td><td>24277</td><td>shots/005__._</td><td>-</td></tr><tr><td>6</td><td>Agent步骤6</td><td>AGENT</td><td>FAILED</td><td>-</td><td>{&quot;expected_result&quot;: &quot;官网链接出现在结果列表中&quot;}</td><td>27921</td><td>-</td><td>45 validation errors for AgentOutput
+action.0.DoneActionModel.done
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.DoneActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.SearchActionModel.search
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.SearchActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.NavigateActionModel.navigate
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.NavigateActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.GoBackActionModel.go_back
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.GoBackActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.WaitActionModel.wait.time
+  Extra inputs are not permitted [type=extra_forbidden, input_value=3, input_type=int]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.ClickActionModel.click
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.ClickActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.InputActionModel.input
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.InputActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.UploadFileActionModel.upload_file
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.UploadFileActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.SwitchActionModel.switch
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.SwitchActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.CloseActionModel.close
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.CloseActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.ExtractActionModel.extract
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.ExtractActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.SearchPageActionModel.search_page
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.SearchPageActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.FindElementsActionModel.find_elements
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.FindElementsActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.ScrollActionModel.scroll
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.ScrollActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.SendKeysActionModel.send_keys
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.SendKeysActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.FindTextActionModel.find_text
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.FindTextActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.SaveAsPdfActionModel.save_as_pdf
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.SaveAsPdfActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.DropdownOptionsActionModel.dropdown_options
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.DropdownOptionsActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.SelectDropdownActionModel.select_dropdown
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.SelectDropdownActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.WriteFileActionModel.write_file
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.WriteFileActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.ReplaceFileActionModel.replace_file
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.ReplaceFileActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.ReadFileActionModel.read_file
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.ReadFileActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden
+action.0.EvaluateActionModel.evaluate
+  Field required [type=missing, input_value={&#39;wait&#39;: {&#39;time&#39;: 3}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+action.0.EvaluateActionModel.wait
+  Extra inputs are not permitted [type=extra_forbidden, input_value={&#39;time&#39;: 3}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden</td></tr><tr><td>7</td><td>Agent步骤7 (ActionModel)</td><td>ActionModel</td><td>SUCCESS</td><td>Wait for the TesterHome page to fully load, then verify the page title/URL contains &#39;TesterHome&#39;特征 to complete Step 8.</td><td>{&quot;expected_result&quot;: &quot;浏览器加载新页面&quot;}</td><td>29239</td><td>shots/007__._</td><td>-</td></tr><tr><td>8</td><td>Agent步骤8 (ActionModel)</td><td>ActionModel</td><td>SUCCESS</td><td>All steps completed successfully. Call done to finish the task.</td><td>{&quot;expected_result&quot;: &quot;确认成功进入 TesterHome 官网&quot;}</td><td>17361</td><td>shots/008__._</td><td>-</td></tr></tbody></table></div><div class="card"><h3>原始需求</h3><pre>打开百度https://www.baidu.com/,输入TesterHome然后进行搜索，点击进入官网</pre></div><div class="card"><small>生成时间：2026-04-15 10:52:18</small></div></body></html>

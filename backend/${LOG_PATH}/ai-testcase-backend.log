@@ -1,0 +1,39 @@
+2026-04-15 14:29:20.294 INFO  [background-preinit] [] o.h.v.i.u.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-04-15 14:29:20.339 INFO  [main] [] c.t.b.BackendApplication - Starting BackendApplication using Java 17.0.14 with PID 19188 (D:\cursor\test-case-demo\backend\target\classes started by shian in D:\cursor\test-case-demo\backend)
+2026-04-15 14:29:20.339 INFO  [main] [] c.t.b.BackendApplication - No active profile set, falling back to 1 default profile: "default"
+2026-04-15 14:29:22.585 INFO  [main] [] o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-15 14:29:22.601 INFO  [main] [] o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-04-15 14:29:22.607 INFO  [main] [] o.a.c.c.StandardService - Starting service [Tomcat]
+2026-04-15 14:29:22.608 INFO  [main] [] o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+2026-04-15 14:29:22.687 INFO  [main] [] o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2026-04-15 14:29:22.687 INFO  [main] [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2301 ms
+2026-04-15 14:29:26.821 INFO  [main] [] o.s.b.a.e.w.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+2026-04-15 14:29:26.922 INFO  [main] [] o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-04-15 14:29:26.951 INFO  [main] [] o.s.b.w.e.t.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-15 14:29:27.015 INFO  [main] [] c.t.b.BackendApplication - Started BackendApplication in 7.123 seconds (process running for 7.901)
+2026-04-15 14:29:27.120 INFO  [http-nio-8080-exec-3] [] o.a.c.c.C.[.[.[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-15 14:29:27.121 INFO  [http-nio-8080-exec-3] [] o.s.w.s.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-15 14:29:27.123 INFO  [http-nio-8080-exec-3] [] o.s.w.s.DispatcherServlet - Completed initialization in 1 ms
+2026-04-15 14:29:27.222 WARN  [http-nio-8080-exec-1] [3593fc4935eb435983e8473950fc832a] c.t.b.c.GlobalExceptionHandler - unauthorized request: invalid token
+2026-04-15 14:29:27.223 WARN  [http-nio-8080-exec-3] [e0f179664c024b9ea240a31bdf8c094b] c.t.b.c.GlobalExceptionHandler - unauthorized request: invalid token
+2026-04-15 14:29:27.222 WARN  [http-nio-8080-exec-6] [c638e9b0ecd348cf8c8fe7c70cc88f55] c.t.b.c.GlobalExceptionHandler - unauthorized request: invalid token
+2026-04-15 14:29:27.222 WARN  [http-nio-8080-exec-4] [a065e1c2d5ae4643a3c8ba7ccae5b849] c.t.b.c.GlobalExceptionHandler - unauthorized request: invalid token
+2026-04-15 14:29:27.223 WARN  [http-nio-8080-exec-5] [6da7c02ce9c14b4d80154c6cfb068453] c.t.b.c.GlobalExceptionHandler - unauthorized request: invalid token
+2026-04-15 14:29:27.223 WARN  [http-nio-8080-exec-2] [51721aafacbe4721a91b4947b1648407] c.t.b.c.GlobalExceptionHandler - unauthorized request: invalid token
+2026-04-15 14:29:27.282 INFO  [main] [] c.z.h.HikariDataSource - HikariPool-1 - Starting...
+2026-04-15 14:29:27.379 WARN  [http-nio-8080-exec-7] [5b02762cd6684529a6be563c0a198aa6] c.t.b.c.GlobalExceptionHandler - unauthorized request: invalid token
+2026-04-15 14:29:27.397 WARN  [http-nio-8080-exec-9] [7beccbba515b482399a3a7b26e6c58d8] c.t.b.c.GlobalExceptionHandler - unauthorized request: invalid token
+2026-04-15 14:29:27.646 INFO  [main] [] c.z.h.p.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@57ac236a
+2026-04-15 14:29:27.662 INFO  [main] [] c.z.h.HikariDataSource - HikariPool-1 - Start completed.
+2026-04-15 14:29:27.784 INFO  [main] [] c.t.b.s.AuthService - admin password already uses bcrypt
+2026-04-15 14:29:28.631 INFO  [http-nio-8080-exec-4] [826ab7fdafdb4ac791022ade476d549c] c.t.b.c.AuthController - login request, username=admin
+2026-04-15 14:29:28.820 INFO  [http-nio-8080-exec-4] [826ab7fdafdb4ac791022ade476d549c] c.t.b.s.AuthService - login success, userId=1, username=admin
+2026-04-15 14:29:28.908 INFO  [http-nio-8080-exec-1] [151545f143974da78f5c8631a1e43f25] c.t.b.c.ProjectController - list projects request, pageNo=1, pageSize=20, name=null, code=null, sortBy=id, sortOrder=desc
+2026-04-15 14:29:31.322 INFO  [http-nio-8080-exec-5] [bfe8735b930740c581adb438dc01fbeb] c.t.b.c.ProjectController - list projects request, pageNo=1, pageSize=200, name=null, code=null, sortBy=id, sortOrder=desc
+2026-04-15 14:29:31.363 INFO  [http-nio-8080-exec-6] [576578e41e7d43f8890c6e066206378d] c.t.b.c.VersionController - list all versions request, pageNo=1, pageSize=500, projectId=null, keyword=, status=, sortBy=id, sortOrder=desc
+2026-04-15 14:29:32.773 INFO  [http-nio-8080-exec-4] [2f38b9ee7ef84285b20b6e6d448ce17b] c.t.b.c.ProjectController - list projects request, pageNo=1, pageSize=200, name=null, code=null, sortBy=id, sortOrder=desc
+2026-04-15 14:29:32.792 INFO  [http-nio-8080-exec-1] [75804cee76404376a66d004f05c1f0fb] c.t.b.c.VersionController - list all versions request, pageNo=1, pageSize=500, projectId=null, keyword=, status=, sortBy=id, sortOrder=desc
+2026-04-15 14:30:26.158 INFO  [http-nio-8080-exec-5] [d54c5f660b044db0b6148e235f2215e9] c.t.b.c.ProjectController - list projects request, pageNo=1, pageSize=200, name=null, code=null, sortBy=id, sortOrder=desc
+2026-04-15 14:30:26.179 INFO  [http-nio-8080-exec-2] [7415ce07a7de440e852c6845fb278c09] c.t.b.c.VersionController - list all versions request, pageNo=1, pageSize=500, projectId=null, keyword=, status=, sortBy=id, sortOrder=desc
+2026-04-15 14:30:33.652 INFO  [http-nio-8080-exec-10] [c8736013d29344128c8e286886e76cf4] c.t.b.c.ProjectController - list projects request, pageNo=1, pageSize=200, name=null, code=null, sortBy=id, sortOrder=desc
+2026-04-15 14:30:33.668 INFO  [http-nio-8080-exec-4] [9727ab1f157544bda141318699419357] c.t.b.c.VersionController - list all versions request, pageNo=1, pageSize=500, projectId=null, keyword=, status=, sortBy=id, sortOrder=desc

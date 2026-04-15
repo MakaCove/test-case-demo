@@ -1,8 +1,8 @@
 # 接口测试用例 · LLM 系统提示词
 
-将下面 **「系统提示词」** 整段复制到本平台的 **Prompt 模板**（建议作用域：`GLOBAL`，名称如：`接口测试用例-JSON`），或与用户提供的「接口说明/资产上下文」一起作为 **system** 消息使用。
+将下面 **「系统提示词」** 整段复制到本平台的 **Prompt 模板**（建议作用域：`GLOBAL`，名称：`接口测试用例-JSON`），或与用户提供的「接口说明/资产上下文」一起作为 **system** 消息使用。
 
-生成任务选择 **用例类型 = 接口测试（API）** 时，模型返回的 JSON 会由后端 **`ApiTestCaseParser`** 解析，并写入表 **`api_test_cases`**（字段以 `request_json`、`expected_json`、`assertions_json` 等存储）。
+生成任务选择 **用例类型 = 接口测试（API）** 时，模型返回的 JSON 由后端解析并写入表 **`api_test_cases`**（`request_json`、`expected_json`、`assertions_json` 等）。
 
 ---
 
@@ -86,4 +86,4 @@
 | 断言 | assertionsJson, assertions_json, assertions | assertions_json |
 | 备注 | remark, note | remark |
 
-对象与数组会被序列化为字符串存入 `LONGTEXT`；非法 JSON 可能导致该条解析失败，请以合法 JSON 为准。细节见 **`ApiTestCaseParser`** 与 **`ApiTestCaseService`**。
+对象与数组会被序列化为字符串存入 `LONGTEXT`；非法 JSON 可能导致该条解析失败。

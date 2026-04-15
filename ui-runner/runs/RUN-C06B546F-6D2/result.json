@@ -1,0 +1,88 @@
+{
+  "runId": "RUN-C06B546F-6D2",
+  "status": "COMPLETED",
+  "summary": "AgentHistoryList(all_results=[ActionResult(is_done=False, success=None, judgement=None, error=\"Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': 'b48b5be4-fe58-93c2-96db-e29a75c467b0'}\", attachments=None, images=None, long_term_memory=None, extracted_content=None, include_extracted_content_only_once=False, metadata=None, include_in_memory=False), ActionResult(is_done=False, success=None, judgement=None, error=\"Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': 'e12eba0c-d932-99c9-9b10-617059dd752d'}\", attachments=None, images=None, long_term_memory=None, extracted_content=None, include_extracted_content_only_once=False, metadata=None, include_in_memory=False), ActionResult(is_done=False, success=None, judgement=None, error=\"Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': 'f0ca0448-3012-923f-a743-dc42f14b3369'}\", attachments=None, images=None, long_term_memory=None, extracted_content=None, include_extracted_content_only_once=False, metadata=None, include_in_memory=False), ActionResult(is_done=False, success=None, judgement=None, error=\"Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': '4cd0b36f-975c-9cb9-aaad-205b21d0c129'}\", attachments=None, images=None, long_term_memory=None, extracted_content=None, include_extracted_content_only_once=False, metadata=None, include_in_memory=False), ActionResult(is_done=False, success=None, judgement=None, error=\"Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': 'b2b843e3-5583-9628-81bf-f4178c7d3227'}\", attachments=None, images=None, long_term_memory=None, extracted_content=None, include_extracted_content_only_once=False, metadata=None, include_in_memory=False), ActionResult(is_done=False, success=None, judgement=None, error=\"Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': '8f114d99-040c-9c5d-b3d6-6d661a83f348'}\", attachments=None, images=None, long_term_memory=None, extracted_content=None, include_extracted_content_only_once=False, metadata=None, include_in_memory=False)], all_model_outputs=[])",
+  "errorMessage": null,
+  "artifactsJson": "{\"runDir\": \"D:/cursor/test-case-demo/ui-runner/runs/RUN-C06B546F-6D2\", \"resultFile\": \"D:/cursor/test-case-demo/ui-runner/runs/RUN-C06B546F-6D2/result.json\", \"agentHistoryFile\": \"agent_history.json\"}",
+  "steps": [
+    {
+      "stepNo": 1,
+      "title": "Agent步骤1",
+      "actionType": "AGENT",
+      "status": "FAILED",
+      "errorMessage": "Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': 'b48b5be4-fe58-93c2-96db-e29a75c467b0'}",
+      "screenshotPath": null,
+      "durationMs": 5524,
+      "targetJson": "[null]",
+      "inputValue": "打开浏览器并访问入口地址 https://www.baidu.com",
+      "expectJson": "{\"expected_result\": \"百度首页加载成功，可见搜索输入框\"}",
+      "rawLog": "error: Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': 'b48b5be4-fe58-93c2-96db-e29a75c467b0'}"
+    },
+    {
+      "stepNo": 2,
+      "title": "Agent步骤2",
+      "actionType": "AGENT",
+      "status": "FAILED",
+      "errorMessage": "Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': 'e12eba0c-d932-99c9-9b10-617059dd752d'}",
+      "screenshotPath": null,
+      "durationMs": 4408,
+      "targetJson": "[null]",
+      "inputValue": "在搜索输入框中输入文本 TesterHome",
+      "expectJson": "{\"expected_result\": \"搜索框内显示已输入的文本 TesterHome\"}",
+      "rawLog": "error: Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': 'e12eba0c-d932-99c9-9b10-617059dd752d'}"
+    },
+    {
+      "stepNo": 3,
+      "title": "Agent步骤3",
+      "actionType": "AGENT",
+      "status": "FAILED",
+      "errorMessage": "Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': 'f0ca0448-3012-923f-a743-dc42f14b3369'}",
+      "screenshotPath": null,
+      "durationMs": 4193,
+      "targetJson": "[null]",
+      "inputValue": "点击搜索按钮执行搜索",
+      "expectJson": "{\"expected_result\": \"页面跳转至搜索结果页，显示相关结果列表\"}",
+      "rawLog": "error: Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': 'f0ca0448-3012-923f-a743-dc42f14b3369'}"
+    },
+    {
+      "stepNo": 4,
+      "title": "Agent步骤4",
+      "actionType": "AGENT",
+      "status": "FAILED",
+      "errorMessage": "Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': '4cd0b36f-975c-9cb9-aaad-205b21d0c129'}",
+      "screenshotPath": null,
+      "durationMs": 1703,
+      "targetJson": "[null]",
+      "inputValue": "在搜索结果中找到并点击 TesterHome 官网链接",
+      "expectJson": "{\"expected_result\": \"成功跳转至 TesterHome 官方网站页面\"}",
+      "rawLog": "error: Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': '4cd0b36f-975c-9cb9-aaad-205b21d0c129'}"
+    },
+    {
+      "stepNo": 5,
+      "title": "Agent步骤5",
+      "actionType": "AGENT",
+      "status": "FAILED",
+      "errorMessage": "Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': 'b2b843e3-5583-9628-81bf-f4178c7d3227'}",
+      "screenshotPath": null,
+      "durationMs": 1675,
+      "targetJson": "[null]",
+      "inputValue": "[null]",
+      "expectJson": null,
+      "rawLog": "error: Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': 'b2b843e3-5583-9628-81bf-f4178c7d3227'}"
+    },
+    {
+      "stepNo": 6,
+      "title": "Agent步骤6",
+      "actionType": "AGENT",
+      "status": "FAILED",
+      "errorMessage": "Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': '8f114d99-040c-9c5d-b3d6-6d661a83f348'}",
+      "screenshotPath": null,
+      "durationMs": 1511,
+      "targetJson": "[null]",
+      "inputValue": "[null]",
+      "expectJson": null,
+      "rawLog": "error: Error code: 401 - {'error': {'code': 'invalid_api_key', 'message': 'invalid access token or token expired', 'param': None, 'type': 'invalid_request_error'}, 'request_id': '8f114d99-040c-9c5d-b3d6-6d661a83f348'}"
+    }
+  ],
+  "updatedAt": "2026-04-15T14:30:09"
+}
