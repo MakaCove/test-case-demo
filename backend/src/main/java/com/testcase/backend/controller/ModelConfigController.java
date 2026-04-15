@@ -2,9 +2,11 @@ package com.testcase.backend.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.testcase.backend.common.ApiResponse;
 import com.testcase.backend.common.StatusConstants;
 import com.testcase.backend.dto.ModelConfigDtos;
+import com.testcase.backend.dto.PagedResult;
 import com.testcase.backend.entity.ModelConfigEntity;
 import com.testcase.backend.mapper.ModelConfigMapper;
 import com.testcase.backend.service.ModelConnectivityService;
@@ -24,7 +26,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/model-configs")
@@ -41,10 +42,14 @@ public class ModelConfigController {
     }
 
     @GetMapping
-    public ApiResponse<List<ModelConfigEntity>> list(
+    public ApiResponse<PagedResult<ModelConfigEntity>> list(
+            @RequestParam(defaultValue = "1") int pageNo,
+            @RequestParam(defaultValue = "20") int pageSize,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String status
     ) {
+        int safePageNo = Math.max(1, pageNo);
+        int safePageSize = Math.max(1, pageSize);
         var wrapper = new LambdaQueryWrapper<ModelConfigEntity>()
                 .eq(ModelConfigEntity::getIsDeleted, 0)
                 .orderByDesc(ModelConfigEntity::getId);
@@ -54,7 +59,8 @@ public class ModelConfigController {
         if (status != null && !status.isBlank()) {
             wrapper.eq(ModelConfigEntity::getStatus, status.trim());
         }
-        return ApiResponse.success(modelConfigMapper.selectList(wrapper));
+        Page<ModelConfigEntity> page = modelConfigMapper.selectPage(new Page<>(safePageNo, safePageSize), wrapper);
+        return ApiResponse.success(new PagedResult<>(page.getRecords(), safePageNo, safePageSize, page.getTotal()));
     }
 
     @PostMapping

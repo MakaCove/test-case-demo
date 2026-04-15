@@ -135,27 +135,29 @@ onMounted(async () => {
 
 <template>
   <div class="page-shell">
-    <el-card>
+    <el-card class="query-card">
       <div class="query-row">
-        <el-select
-          v-model="projectId"
-          filterable
-          clearable
-          :loading="projectsLoading"
-          placeholder="项目"
-          style="width: 240px"
-          @change="(v:any)=>{ versionId=''; loadVersionsForProject(Number(v || 0)) }"
-        >
-          <el-option v-for="p in projects" :key="p.id" :label="`${p.name}（${p.code}）`" :value="String(p.id)" />
-        </el-select>
-        <el-select v-model="versionId" filterable clearable :loading="versionsLoading" placeholder="版本" style="width: 260px">
-          <el-option v-for="v in versions" :key="v.id" :label="`${v.versionNo}${v.name ? ' - ' + v.name : ''}`" :value="String(v.id)" />
-        </el-select>
-        <el-select v-model="status" clearable placeholder="状态" style="width: 140px">
-          <el-option label="成功" value="SUCCESS" />
-          <el-option label="失败" value="FAILED" />
-          <el-option label="取消" value="CANCELLED" />
-        </el-select>
+        <div class="query-filters">
+          <el-select
+            v-model="projectId"
+            filterable
+            clearable
+            :loading="projectsLoading"
+            placeholder="项目"
+            style="width: 240px"
+            @change="(v:any)=>{ versionId=''; loadVersionsForProject(Number(v || 0)) }"
+          >
+            <el-option v-for="p in projects" :key="p.id" :label="`${p.name}（${p.code}）`" :value="String(p.id)" />
+          </el-select>
+          <el-select v-model="versionId" filterable clearable :loading="versionsLoading" placeholder="版本" style="width: 260px">
+            <el-option v-for="v in versions" :key="v.id" :label="`${v.versionNo}${v.name ? ' - ' + v.name : ''}`" :value="String(v.id)" />
+          </el-select>
+          <el-select v-model="status" clearable placeholder="状态" style="width: 140px">
+            <el-option label="成功" value="SUCCESS" />
+            <el-option label="失败" value="FAILED" />
+            <el-option label="取消" value="CANCELLED" />
+          </el-select>
+        </div>
         <div class="query-actions">
           <el-button type="primary" @click="() => { pageNo = 1; loadReports() }">查询</el-button>
           <el-button @click="() => { projectId=''; versionId=''; status=''; pageNo=1; loadReports() }">重置</el-button>
@@ -164,31 +166,33 @@ onMounted(async () => {
     </el-card>
 
     <el-card class="table-card">
-      <el-table :data="records" :size="tableDensity" border stripe v-loading="loading" height="100%">
-        <el-table-column prop="reportNo" label="报告编号" min-width="140" />
-        <el-table-column label="任务号" min-width="140">
-          <template #default="{ row }">{{ taskNoDisplay(row.taskId) }}</template>
-        </el-table-column>
-        <el-table-column label="状态" width="100">
-          <template #default="{ row }">
-            <el-tag size="small" :type="reportStatusTagType(row.status)">{{ reportStatusLabel(row.status) }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="totalSteps" label="总步数" width="90" />
-        <el-table-column prop="passedSteps" label="成功" width="80" />
-        <el-table-column prop="failedSteps" label="失败" width="80" />
-        <el-table-column prop="summary" label="摘要" min-width="220" show-overflow-tooltip />
-        <el-table-column label="执行开始" width="170"><template #default="{ row }">{{ formatDateTime(row.startedAt) }}</template></el-table-column>
-        <el-table-column label="执行结束" width="170"><template #default="{ row }">{{ formatDateTime(row.finishedAt) }}</template></el-table-column>
-        <el-table-column label="创建" width="170"><template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template></el-table-column>
-        <el-table-column label="操作" width="170" fixed="right">
-          <template #default="{ row }">
-            <el-button link type="primary" @click="openDetail(row)">详情</el-button>
-            <el-button link type="success" :disabled="!row.reportFilePath" @click="openHtmlReport(row)">HTML</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      <div class="pager">
+      <div class="table-body">
+        <el-table :data="records" :size="tableDensity" border stripe v-loading="loading" height="100%">
+          <el-table-column prop="reportNo" label="报告编号" min-width="140" />
+          <el-table-column label="任务号" min-width="140">
+            <template #default="{ row }">{{ taskNoDisplay(row.taskId) }}</template>
+          </el-table-column>
+          <el-table-column label="状态" width="100">
+            <template #default="{ row }">
+              <el-tag size="small" :type="reportStatusTagType(row.status)">{{ reportStatusLabel(row.status) }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="totalSteps" label="总步数" width="90" />
+          <el-table-column prop="passedSteps" label="成功" width="80" />
+          <el-table-column prop="failedSteps" label="失败" width="80" />
+          <el-table-column prop="summary" label="摘要" min-width="220" show-overflow-tooltip />
+          <el-table-column label="执行开始" width="170"><template #default="{ row }">{{ formatDateTime(row.startedAt) }}</template></el-table-column>
+          <el-table-column label="执行结束" width="170"><template #default="{ row }">{{ formatDateTime(row.finishedAt) }}</template></el-table-column>
+          <el-table-column label="创建" width="170"><template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template></el-table-column>
+          <el-table-column label="操作" width="110" fixed="right">
+            <template #default="{ row }">
+              <el-button link type="primary" @click="openDetail(row)">详情</el-button>
+              <el-button link type="success" :disabled="!row.reportFilePath" @click="openHtmlReport(row)">HTML</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+      <div class="table-footer">
         <el-pagination
           v-model:current-page="pageNo"
           v-model:page-size="pageSize"
@@ -232,9 +236,4 @@ onMounted(async () => {
 
 <style scoped>
 .page-shell { height: 100%; display: grid; grid-template-rows: auto 1fr; gap: 12px; }
-.query-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.query-actions { margin-left: auto; display: inline-flex; gap: 10px; align-items: center; }
-.table-card { min-height: 0; display: flex; flex-direction: column; }
-.table-card :deep(.el-card__body) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.pager { display: flex; justify-content: flex-end; padding-top: 10px; }
 </style>

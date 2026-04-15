@@ -60,18 +60,18 @@ async function loadVersions() {
 }
 
 async function loadModelAndPromptOptions() {
-  const [models, prompts] = await Promise.all([
-    api.getModelConfigs({}),
-    api.getPromptTemplates({}),
+  const [modelsRes, promptsRes] = await Promise.all([
+    api.getModelConfigs({ pageNo: 1, pageSize: 500 }),
+    api.getPromptTemplates({ pageNo: 1, pageSize: 500 }),
   ])
-  modelConfigs.value = models.map((m) => ({
+  modelConfigs.value = (modelsRes.records ?? []).map((m) => ({
     id: m.id,
     name: m.name,
     provider: m.provider,
     modelKey: m.modelKey,
     status: m.status,
   }))
-  promptTemplates.value = prompts.map((p) => ({
+  promptTemplates.value = (promptsRes.records ?? []).map((p) => ({
     id: p.id,
     name: p.name,
     scopeType: p.scopeType,
@@ -157,18 +157,18 @@ function openCreate() {
   cases.value = []
   createVisible.value = true
   Promise.all([
-    api.getModelConfigs({ status: 'ENABLED' }),
-    api.getPromptTemplates({ status: 'ENABLED', scopeType: 'GLOBAL' }),
+    api.getModelConfigs({ status: 'ENABLED', pageNo: 1, pageSize: 500 }),
+    api.getPromptTemplates({ status: 'ENABLED', scopeType: 'GLOBAL', pageNo: 1, pageSize: 500 }),
   ])
-    .then(([models, prompts]) => {
-      modelConfigs.value = models.map((m) => ({
+    .then(([modelsRes, promptsRes]) => {
+      modelConfigs.value = (modelsRes.records ?? []).map((m) => ({
         id: m.id,
         name: m.name,
         provider: m.provider,
         modelKey: m.modelKey,
         status: m.status,
       }))
-      promptTemplates.value = prompts.map((p) => ({
+      promptTemplates.value = (promptsRes.records ?? []).map((p) => ({
         id: p.id,
         name: p.name,
         scopeType: p.scopeType,
@@ -342,7 +342,7 @@ onMounted(async () => {
           <template #default="{ row }">{{ formatDateTime(row.finishedAt) }}</template>
         </el-table-column>
         <el-table-column prop="errorMessage" label="错误" min-width="180" show-overflow-tooltip />
-        <el-table-column label="操作" width="340" fixed="right">
+        <el-table-column label="操作" width="260" fixed="right">
           <template #default="{ row }">
             <el-button
               link

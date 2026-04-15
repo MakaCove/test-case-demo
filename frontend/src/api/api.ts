@@ -391,11 +391,17 @@ export const api = {
       password,
     })
   },
+  register(payload: { username: string; displayName?: string; password: string }) {
+    return request<{ token: string; userInfo: { id: number; username: string; displayName: string } }>('POST', '/auth/register', payload)
+  },
   logout() {
     return request<null>('POST', '/auth/logout')
   },
   me() {
     return request<{ id: number; username: string; displayName: string }>('GET', '/auth/me')
+  },
+  changePassword(payload: { oldPassword: string; newPassword: string }) {
+    return request<null>('POST', '/auth/change-password', payload)
   },
   getProjects(params?: { name?: string; code?: string; pageNo?: number; pageSize?: number; sortBy?: string; sortOrder?: 'asc' | 'desc' }) {
     const useCache = isDefaultProjectsQuery(params)
@@ -653,12 +659,14 @@ export const api = {
   materializeTestCasesFromTask(taskId: number, count?: number) {
     return request<number>('POST', `/test-cases/materialize-from-task/${taskId}`, { count })
   },
-  getModelConfigs(params?: { name?: string; status?: string }) {
+  getModelConfigs(params?: { name?: string; status?: string; pageNo?: number; pageSize?: number }) {
     const q = new URLSearchParams({
+      pageNo: String(params?.pageNo ?? 1),
+      pageSize: String(params?.pageSize ?? 20),
       name: params?.name ?? '',
       status: params?.status ?? '',
     })
-    return request<Array<{
+    return request<PagedResult<{
       id: number
       name: string
       provider: string
@@ -704,14 +712,16 @@ export const api = {
   testModelConnection(id: number, prompt?: string) {
     return request<string>('POST', `/model-configs/${id}/test-connection`, { prompt })
   },
-  getPromptTemplates(params?: { name?: string; status?: string; scopeType?: string; scopeId?: number }) {
+  getPromptTemplates(params?: { name?: string; status?: string; scopeType?: string; scopeId?: number; pageNo?: number; pageSize?: number }) {
     const q = new URLSearchParams({
+      pageNo: String(params?.pageNo ?? 1),
+      pageSize: String(params?.pageSize ?? 20),
       name: params?.name ?? '',
       status: params?.status ?? '',
       scopeType: params?.scopeType ?? '',
       scopeId: params?.scopeId ? String(params.scopeId) : '',
     })
-    return request<Array<{
+    return request<PagedResult<{
       id: number
       name: string
       scopeType: string

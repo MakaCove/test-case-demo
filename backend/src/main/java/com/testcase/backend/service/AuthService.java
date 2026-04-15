@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,20 +37,45 @@ public class AuthService {
     }
 
     public AuthDtos.LoginResponse login(String username, String rawPassword) {
-        UserEntity user = findActiveUserByUsername(username);
+        String normalizedUsername = normalizeUsername(username);
+        UserEntity user = findActiveUserByUsername(normalizedUsername);
         if (user == null) {
-            log.warn("login failed: username not found, username={}", username);
+            log.warn("login failed: username not found, username={}", normalizedUsername);
             throw new IllegalArgumentException("invalid username or password");
         }
         if (!passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
-            log.warn("login failed: password mismatch, username={}", username);
+            log.warn("login failed: password mismatch, username={}", normalizedUsername);
             throw new IllegalArgumentException("invalid username or password");
         }
 
-        String token = UUID.randomUUID().toString().replace("-", "");
-        tokenUserMap.put(token, user.getId());
+        String token = issueToken(user.getId());
         log.info("login success, userId={}, username={}", user.getId(), user.getUsername());
         return new AuthDtos.LoginResponse(token, toUserInfo(user));
+    }
+
+    public AuthDtos.LoginResponse register(String username, String displayName, String rawPassword) {
+        String normalizedUsername = normalizeUsername(username);
+        validateUsername(normalizedUsername);
+        validatePassword(rawPassword);
+        if (findAnyUserByUsername(normalizedUsername) != null) {
+            throw new IllegalArgumentException("用户名已存在");
+        }
+
+        String normalizedDisplayName = normalizeDisplayName(displayName, normalizedUsername);
+        UserEntity entity = new UserEntity();
+        LocalDateTime now = LocalDateTime.now();
+        entity.setUsername(normalizedUsername);
+        entity.setDisplayName(normalizedDisplayName);
+        entity.setPasswordHash(passwordEncoder.encode(rawPassword));
+        entity.setStatus("ACTIVE");
+        entity.setCreatedAt(now);
+        entity.setUpdatedAt(now);
+        entity.setIsDeleted(0);
+        userMapper.insert(entity);
+
+        String token = issueToken(entity.getId());
+        log.info("register success, userId={}, username={}", entity.getId(), entity.getUsername());
+        return new AuthDtos.LoginResponse(token, toUserInfo(entity));
     }
 
     public void logout(String token) {
@@ -82,6 +108,48 @@ public class AuthService {
             throw new UnauthorizedException("invalid token");
         }
         return toUserInfo(user);
+    }
+
+    public void changePassword(String token, String oldPassword, String newPassword) {
+        if (token == null || token.isBlank()) {
+            throw new UnauthorizedException("missing token");
+        }
+        validatePassword(newPassword);
+        Long userId = tokenUserMap.get(token);
+        if (userId == null) {
+            throw new UnauthorizedException("invalid token");
+        }
+        UserEntity user = userMapper.selectOne(
+                new LambdaQueryWrapper<UserEntity>()
+                        .eq(UserEntity::getId, userId)
+                        .eq(UserEntity::getIsDeleted, 0)
+                        .eq(UserEntity::getStatus, "ACTIVE")
+                        .last("LIMIT 1")
+        );
+        if (user == null) {
+            tokenUserMap.remove(token);
+            throw new UnauthorizedException("invalid token");
+        }
+        if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
+            throw new IllegalArgumentException("原密码不正确");
+        }
+        if (oldPassword.equals(newPassword)) {
+            throw new IllegalArgumentException("新密码不能与原密码相同");
+        }
+        int updated = userMapper.update(
+                null,
+                new LambdaUpdateWrapper<UserEntity>()
+                        .set(UserEntity::getPasswordHash, passwordEncoder.encode(newPassword))
+                        .set(UserEntity::getUpdatedAt, LocalDateTime.now())
+                        .eq(UserEntity::getId, user.getId())
+                        .eq(UserEntity::getIsDeleted, 0)
+        );
+        if (updated == 0) {
+            throw new IllegalArgumentException("密码修改失败");
+        }
+
+        // 密码更新后，当前用户所有旧 token 失效，要求重新登录。
+        tokenUserMap.entrySet().removeIf(entry -> user.getId().equals(entry.getValue()));
     }
 
     public void ensureAdminPasswordSecurity() {
@@ -117,6 +185,44 @@ public class AuthService {
                         .eq(UserEntity::getStatus, "ACTIVE")
                         .last("LIMIT 1")
         );
+    }
+
+    private UserEntity findAnyUserByUsername(String username) {
+        return userMapper.selectOne(
+                new LambdaQueryWrapper<UserEntity>()
+                        .eq(UserEntity::getUsername, username)
+                        .eq(UserEntity::getIsDeleted, 0)
+                        .last("LIMIT 1")
+        );
+    }
+
+    private String issueToken(Long userId) {
+        String token = UUID.randomUUID().toString().replace("-", "");
+        tokenUserMap.put(token, userId);
+        return token;
+    }
+
+    private String normalizeUsername(String username) {
+        return username == null ? "" : username.trim();
+    }
+
+    private String normalizeDisplayName(String displayName, String fallbackUsername) {
+        if (displayName == null || displayName.isBlank()) {
+            return fallbackUsername;
+        }
+        return displayName.trim();
+    }
+
+    private void validateUsername(String username) {
+        if (username.length() < 3 || username.length() > 32) {
+            throw new IllegalArgumentException("用户名长度需为 3-32 位");
+        }
+    }
+
+    private void validatePassword(String password) {
+        if (password == null || password.length() < 6 || password.length() > 64) {
+            throw new IllegalArgumentException("密码长度需为 6-64 位");
+        }
     }
 
     private AuthDtos.UserInfo toUserInfo(UserEntity user) {

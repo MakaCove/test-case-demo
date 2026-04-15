@@ -615,7 +615,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="assets-page">
+  <div class="assets-page page-shell">
     <el-card shadow="never" class="query-card">
       <div class="query-row">
         <div class="query-filters">
@@ -657,70 +657,82 @@ onMounted(async () => {
       </div>
     </el-card>
 
-    <el-table :data="records" :size="tableDensity" v-loading="loading" border class="table-area" @selection-change="onSelectionChange">
-      <el-table-column type="selection" width="50" />
-      <el-table-column prop="id" label="ID" width="88" />
-      <el-table-column label="资产编码" min-width="160" show-overflow-tooltip>
-        <template #default="{ row }">{{ (row.assetCodes || []).join(' · ') || '—' }}</template>
-      </el-table-column>
-      <el-table-column prop="relationCode" label="关联批次码" min-width="260" />
-      <el-table-column label="项目" min-width="200" show-overflow-tooltip>
-        <template #default="{ row }">{{ projectDisplay(row) }}</template>
-      </el-table-column>
-      <el-table-column label="版本（版本号 · 名称）" min-width="200" show-overflow-tooltip>
-        <template #default="{ row }">{{ versionDisplay(row) }}</template>
-      </el-table-column>
-      <el-table-column prop="title" label="标题" min-width="260" show-overflow-tooltip />
-      <el-table-column label="录入方式" width="92" align="center">
-        <template #default="{ row }">
-          <span v-if="!row.hasText && !row.hasFile">—</span>
-          <el-tag
-            v-else
-            :type="row.hasText && row.hasFile ? 'warning' : row.hasText ? 'success' : 'info'"
-            effect="plain"
-            size="small"
-          >
-            {{ requirementEntryLabel(row) }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="手动描述" width="92" align="center">
-        <template #default="{ row }">{{ row.hasText ? '有' : '无' }}</template>
-      </el-table-column>
-      <el-table-column label="文档录入" width="92" align="center">
-        <template #default="{ row }">{{ row.hasFile ? '有' : '无' }}</template>
-      </el-table-column>
-      <el-table-column label="原型图" width="100">
-        <template #default="{ row }">{{ row.hasPrototype ? '有' : '无' }}</template>
-      </el-table-column>
-      <el-table-column label="创建时间" min-width="180">
-        <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
-      </el-table-column>
-      <el-table-column label="更新时间" min-width="180">
-        <template #default="{ row }">{{ formatDateTime(row.updatedAt) }}</template>
-      </el-table-column>
-      <el-table-column label="操作" width="180" fixed="right">
-        <template #default="{ row }">
-          <el-button link type="primary" @click="openEditDialog(row)">修改</el-button>
-          <el-divider direction="vertical" />
-          <el-button link type="primary" @click="openDetail(row)">详情</el-button>
-          <el-divider direction="vertical" />
-          <el-button link type="danger" @click="onDeleteOne(row)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+    <el-card class="table-card">
+      <div class="table-body">
+        <el-table
+          :data="records"
+          :size="tableDensity"
+          v-loading="loading"
+          border
+          stripe
+          height="100%"
+          @selection-change="onSelectionChange"
+        >
+          <el-table-column type="selection" width="50" />
+          <el-table-column prop="id" label="ID" width="88" />
+          <el-table-column label="资产编码" min-width="160" show-overflow-tooltip>
+            <template #default="{ row }">{{ (row.assetCodes || []).join(' · ') || '—' }}</template>
+          </el-table-column>
+          <el-table-column prop="relationCode" label="关联批次码" min-width="260" />
+          <el-table-column label="项目" min-width="200" show-overflow-tooltip>
+            <template #default="{ row }">{{ projectDisplay(row) }}</template>
+          </el-table-column>
+          <el-table-column label="版本（版本号 · 名称）" min-width="200" show-overflow-tooltip>
+            <template #default="{ row }">{{ versionDisplay(row) }}</template>
+          </el-table-column>
+          <el-table-column prop="title" label="标题" min-width="260" show-overflow-tooltip />
+          <el-table-column label="录入方式" width="92" align="center">
+            <template #default="{ row }">
+              <span v-if="!row.hasText && !row.hasFile">—</span>
+              <el-tag
+                v-else
+                :type="row.hasText && row.hasFile ? 'warning' : row.hasText ? 'success' : 'info'"
+                effect="plain"
+                size="small"
+              >
+                {{ requirementEntryLabel(row) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="手动描述" width="92" align="center">
+            <template #default="{ row }">{{ row.hasText ? '有' : '无' }}</template>
+          </el-table-column>
+          <el-table-column label="文档录入" width="92" align="center">
+            <template #default="{ row }">{{ row.hasFile ? '有' : '无' }}</template>
+          </el-table-column>
+          <el-table-column label="原型图" width="100">
+            <template #default="{ row }">{{ row.hasPrototype ? '有' : '无' }}</template>
+          </el-table-column>
+          <el-table-column label="创建时间" min-width="180">
+            <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
+          </el-table-column>
+          <el-table-column label="更新时间" min-width="180">
+            <template #default="{ row }">{{ formatDateTime(row.updatedAt) }}</template>
+          </el-table-column>
+          <el-table-column label="操作" width="150" fixed="right">
+            <template #default="{ row }">
+              <el-button link type="primary" @click="openEditDialog(row)">修改</el-button>
+              <el-divider direction="vertical" />
+              <el-button link type="primary" @click="openDetail(row)">详情</el-button>
+              <el-divider direction="vertical" />
+              <el-button link type="danger" @click="onDeleteOne(row)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
 
-    <div class="pagination-wrap">
-      <el-pagination
-        v-model:current-page="pageNo"
-        v-model:page-size="pageSize"
-        layout="total, prev, pager, next, sizes"
-        :total="total"
-        :page-sizes="[10, 20, 50]"
-        @current-change="onPageNoChange"
-        @size-change="onPageSizeChange"
-      />
-    </div>
+      <div class="table-footer">
+        <el-pagination
+          v-model:current-page="pageNo"
+          v-model:page-size="pageSize"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          :page-sizes="[10, 20, 50]"
+          @current-change="onPageNoChange"
+          @size-change="onPageSizeChange"
+        />
+      </div>
+    </el-card>
 
     <el-dialog
       v-model="createVisible"
@@ -941,38 +953,7 @@ onMounted(async () => {
 
 <style scoped>
 .assets-page {
-  display: flex;
-  flex-direction: column;
   height: 100%;
-}
-
-.query-card {
-  margin-bottom: 12px;
-}
-
-.query-row {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.query-filters {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-width: 0;
-}
-
-.query-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  margin-left: auto;
 }
 
 .create-grid {
@@ -1118,17 +1099,6 @@ onMounted(async () => {
 
 .asset-dialog-form :deep(.mb-0.el-form-item) {
   margin-bottom: 0;
-}
-
-.table-area {
-  flex: 1;
-  min-height: 0;
-}
-
-.pagination-wrap {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: 12px;
 }
 
 </style>

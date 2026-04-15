@@ -26,6 +26,9 @@ type ModelConfig = {
 
 const loading = ref(false)
 const records = ref<ModelConfig[]>([])
+const pageNo = ref(1)
+const pageSize = ref(20)
+const total = ref(0)
 const filterName = ref('')
 const selectedIds = ref<number[]>([])
 const tableRef = ref<{ clearSelection: () => void } | null>(null)
@@ -47,9 +50,19 @@ const form = ref({
 async function loadList() {
   loading.value = true
   try {
-    records.value = await api.getModelConfigs({
+    const res = await api.getModelConfigs({
       name: filterName.value.trim() || undefined,
+      pageNo: pageNo.value,
+      pageSize: pageSize.value,
     })
+    records.value = res.records ?? []
+    total.value = res.total ?? 0
+    const maxPage = Math.max(1, Math.ceil(total.value / pageSize.value))
+    if (pageNo.value > maxPage && total.value > 0) {
+      pageNo.value = maxPage
+      await loadList()
+      return
+    }
   } catch (e: any) {
     ElMessage.error(e.message || '加载失败')
   } finally {
@@ -63,11 +76,24 @@ function onSelectionChange(rows: ModelConfig[]) {
 }
 
 function onSearch() {
+  pageNo.value = 1
   void loadList()
 }
 
 function onResetFilters() {
   filterName.value = ''
+  pageNo.value = 1
+  void loadList()
+}
+
+function onPageNoChange(v: number) {
+  pageNo.value = v
+  void loadList()
+}
+
+function onPageSizeChange(v: number) {
+  pageSize.value = v
+  pageNo.value = 1
   void loadList()
 }
 
@@ -217,7 +243,7 @@ onMounted(loadList)
           <el-table-column label="更新时间" min-width="170">
             <template #default="{ row }">{{ formatDateTime(row.updatedAt) }}</template>
           </el-table-column>
-          <el-table-column label="操作" min-width="300" width="300" fixed="right" align="center">
+          <el-table-column label="操作" width="240" fixed="right">
             <template #default="{ row }">
               <div class="table-ops">
                 <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
@@ -238,6 +264,17 @@ onMounted(loadList)
             </template>
           </el-table-column>
         </el-table>
+      </div>
+      <div class="table-footer">
+        <el-pagination
+          v-model:current-page="pageNo"
+          v-model:page-size="pageSize"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          :page-sizes="[10, 20, 50, 100]"
+          @current-change="onPageNoChange"
+          @size-change="onPageSizeChange"
+        />
       </div>
     </el-card>
   </div>

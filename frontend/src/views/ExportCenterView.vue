@@ -227,7 +227,7 @@ onMounted(async () => {
           <el-table-column label="更新时间" min-width="170">
             <template #default="{ row }">{{ formatDateTime(row.updatedAt) }}</template>
           </el-table-column>
-          <el-table-column label="操作" width="170" fixed="right">
+          <el-table-column label="操作" width="110" fixed="right">
             <template #default="{ row }">
               <el-button link type="primary" :disabled="row.status !== 'SUCCESS'" @click="download(row)">下载</el-button>
               <el-divider direction="vertical" />

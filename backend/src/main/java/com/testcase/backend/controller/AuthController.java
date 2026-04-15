@@ -30,6 +30,13 @@ public class AuthController {
         return ApiResponse.success(response);
     }
 
+    @PostMapping("/register")
+    public ApiResponse<AuthDtos.LoginResponse> register(@Valid @RequestBody AuthDtos.RegisterRequest request) {
+        log.info("register request, username={}", request.username());
+        var response = authService.register(request.username(), request.displayName(), request.password());
+        return ApiResponse.success(response);
+    }
+
     @PostMapping("/logout")
     public ApiResponse<Void> logout(@RequestHeader(value = "Authorization", required = false) String authorization) {
         String token = extractBearerToken(authorization);
@@ -41,6 +48,16 @@ public class AuthController {
     public ApiResponse<AuthDtos.UserInfo> me(@RequestHeader(value = "Authorization", required = false) String authorization) {
         String token = extractBearerToken(authorization);
         return ApiResponse.success(authService.currentUser(token));
+    }
+
+    @PostMapping("/change-password")
+    public ApiResponse<Void> changePassword(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @Valid @RequestBody AuthDtos.ChangePasswordRequest request
+    ) {
+        String token = extractBearerToken(authorization);
+        authService.changePassword(token, request.oldPassword(), request.newPassword());
+        return ApiResponse.success(null);
     }
 
     private String extractBearerToken(String authorization) {

@@ -2,8 +2,10 @@ package com.testcase.backend.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.testcase.backend.common.ApiResponse;
 import com.testcase.backend.common.StatusConstants;
+import com.testcase.backend.dto.PagedResult;
 import com.testcase.backend.dto.PromptTemplateDtos;
 import com.testcase.backend.entity.PromptTemplateEntity;
 import com.testcase.backend.mapper.PromptTemplateMapper;
@@ -21,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/prompt-templates")
@@ -35,12 +36,16 @@ public class PromptTemplateController {
     }
 
     @GetMapping
-    public ApiResponse<List<PromptTemplateEntity>> list(
+    public ApiResponse<PagedResult<PromptTemplateEntity>> list(
+            @RequestParam(defaultValue = "1") int pageNo,
+            @RequestParam(defaultValue = "20") int pageSize,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String scopeType,
             @RequestParam(required = false) Long scopeId
     ) {
+        int safePageNo = Math.max(1, pageNo);
+        int safePageSize = Math.max(1, pageSize);
         var wrapper = new LambdaQueryWrapper<PromptTemplateEntity>()
                 .eq(PromptTemplateEntity::getIsDeleted, 0)
                 .orderByDesc(PromptTemplateEntity::getId);
@@ -56,7 +61,8 @@ public class PromptTemplateController {
         if (scopeId != null) {
             wrapper.eq(PromptTemplateEntity::getScopeId, scopeId);
         }
-        return ApiResponse.success(promptTemplateMapper.selectList(wrapper));
+        Page<PromptTemplateEntity> page = promptTemplateMapper.selectPage(new Page<>(safePageNo, safePageSize), wrapper);
+        return ApiResponse.success(new PagedResult<>(page.getRecords(), safePageNo, safePageSize, page.getTotal()));
     }
 
     @PostMapping

@@ -330,18 +330,18 @@ function openCreate() {
   createVisible.value = true
 
   Promise.all([
-    api.getModelConfigs({ status: 'ENABLED' }),
-    api.getPromptTemplates({ status: 'ENABLED', scopeType: 'GLOBAL' }),
+    api.getModelConfigs({ status: 'ENABLED', pageNo: 1, pageSize: 500 }),
+    api.getPromptTemplates({ status: 'ENABLED', scopeType: 'GLOBAL', pageNo: 1, pageSize: 500 }),
   ])
-    .then(([models, prompts]) => {
-      modelConfigs.value = models.map((m) => ({
+    .then(([modelsRes, promptsRes]) => {
+      modelConfigs.value = (modelsRes.records ?? []).map((m) => ({
         id: m.id,
         name: m.name,
         provider: m.provider,
         modelKey: m.modelKey,
         status: m.status,
       }))
-      promptTemplates.value = prompts.map((p) => ({
+      promptTemplates.value = (promptsRes.records ?? []).map((p) => ({
         id: p.id,
         name: p.name,
         scopeType: p.scopeType,
@@ -512,20 +512,20 @@ async function openEdit(row: GenerationTask) {
   editVisible.value = true
 
   try {
-    const [models, prompts, detail] = await Promise.all([
-      api.getModelConfigs({ status: 'ENABLED' }),
-      api.getPromptTemplates({ status: 'ENABLED', scopeType: 'GLOBAL' }),
+    const [modelsRes, promptsRes, detail] = await Promise.all([
+      api.getModelConfigs({ status: 'ENABLED', pageNo: 1, pageSize: 500 }),
+      api.getPromptTemplates({ status: 'ENABLED', scopeType: 'GLOBAL', pageNo: 1, pageSize: 500 }),
       api.getGenerationTaskDetail(row.id),
     ])
 
-    modelConfigs.value = models.map((m) => ({
+    modelConfigs.value = (modelsRes.records ?? []).map((m) => ({
       id: m.id,
       name: m.name,
       provider: m.provider,
       modelKey: m.modelKey,
       status: m.status,
     }))
-    promptTemplates.value = prompts.map((p) => ({
+    promptTemplates.value = (promptsRes.records ?? []).map((p) => ({
       id: p.id,
       name: p.name,
       scopeType: p.scopeType,
@@ -823,7 +823,7 @@ onUnmounted(() => {
             <template #default="{ row }">{{ formatDateTime(row.updatedAt) }}</template>
           </el-table-column>
           <el-table-column prop="errorMessage" label="错误" min-width="220" />
-          <el-table-column label="操作" width="340" fixed="right">
+          <el-table-column label="操作" width="290" fixed="right">
             <template #default="{ row }">
               <el-button
                 link
