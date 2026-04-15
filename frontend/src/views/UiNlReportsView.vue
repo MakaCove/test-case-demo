@@ -22,6 +22,7 @@ const versionId = ref('')
 const status = ref('')
 const loading = ref(false)
 const records = ref<UiNlReport[]>([])
+const taskNoMap = ref<Record<number, string>>({})
 const pageNo = ref(1)
 const pageSize = ref(20)
 const total = ref(0)
@@ -79,12 +80,35 @@ async function loadReports() {
       rows = rows.filter((r) => r.taskId === qTaskId)
     }
     records.value = rows
+    await loadTaskNos(rows)
     total.value = qTaskId ? rows.length : data.total
   } catch (e: any) {
     ElMessage.error(e.message || '加载报告失败')
   } finally {
     loading.value = false
   }
+}
+
+async function loadTaskNos(rows: UiNlReport[]) {
+  const missingTaskIds = Array.from(new Set(rows.map((r) => r.taskId))).filter((id) => id && !taskNoMap.value[id])
+  if (!missingTaskIds.length) return
+  const pairs = await Promise.all(
+    missingTaskIds.map(async (taskId) => {
+      try {
+        const task = await api.getUiNlTask(taskId)
+        return { taskId, taskNo: task.taskNo || `任务#${taskId}` }
+      } catch {
+        return { taskId, taskNo: `任务#${taskId}` }
+      }
+    }),
+  )
+  const next = { ...taskNoMap.value }
+  for (const p of pairs) next[p.taskId] = p.taskNo
+  taskNoMap.value = next
+}
+
+function taskNoDisplay(taskId: number) {
+  return taskNoMap.value[taskId] || `任务#${taskId}`
 }
 
 async function openDetail(row: UiNlReport) {
@@ -132,15 +156,19 @@ onMounted(async () => {
           <el-option label="失败" value="FAILED" />
           <el-option label="取消" value="CANCELLED" />
         </el-select>
-        <el-button type="primary" @click="() => { pageNo = 1; loadReports() }">查询</el-button>
-        <el-button @click="() => { projectId=''; versionId=''; status=''; pageNo=1; loadReports() }">重置</el-button>
+        <div class="query-actions">
+          <el-button type="primary" @click="() => { pageNo = 1; loadReports() }">查询</el-button>
+          <el-button @click="() => { projectId=''; versionId=''; status=''; pageNo=1; loadReports() }">重置</el-button>
+        </div>
       </div>
     </el-card>
 
     <el-card class="table-card">
       <el-table :data="records" :size="tableDensity" border stripe v-loading="loading" height="100%">
         <el-table-column prop="reportNo" label="报告编号" min-width="140" />
-        <el-table-column prop="taskId" label="任务ID" width="100" />
+        <el-table-column label="任务号" min-width="140">
+          <template #default="{ row }">{{ taskNoDisplay(row.taskId) }}</template>
+        </el-table-column>
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag size="small" :type="reportStatusTagType(row.status)">{{ reportStatusLabel(row.status) }}</el-tag>
@@ -205,6 +233,7 @@ onMounted(async () => {
 <style scoped>
 .page-shell { height: 100%; display: grid; grid-template-rows: auto 1fr; gap: 12px; }
 .query-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.query-actions { margin-left: auto; display: inline-flex; gap: 10px; align-items: center; }
 .table-card { min-height: 0; display: flex; flex-direction: column; }
 .table-card :deep(.el-card__body) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .pager { display: flex; justify-content: flex-end; padding-top: 10px; }

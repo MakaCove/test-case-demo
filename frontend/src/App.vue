@@ -60,7 +60,7 @@ async function onLogout() {
         <el-menu router :default-active="$route.path" class="side-menu" :collapse="collapsed">
           <el-menu-item index="/dashboard">
             <el-icon><DataBoard /></el-icon>
-            <template #title>看板</template>
+            <template #title>工作台</template>
           </el-menu-item>
           <el-menu-item index="/projects">
             <el-icon><Folder /></el-icon>

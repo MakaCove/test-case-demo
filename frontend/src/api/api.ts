@@ -305,6 +305,8 @@ const http = axios.create({
   },
 })
 
+const UI_NL_ACTION_TIMEOUT_MS = 45_000
+
 const PROJECT_LIST_CACHE_TTL_MS = 60_000
 let projectsListCache: { expiresAt: number; data: PagedResult<Project> | null; pending: Promise<PagedResult<Project>> | null } = {
   expiresAt: 0,
@@ -358,12 +360,18 @@ http.interceptors.response.use(
   },
 )
 
-async function request<T>(method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE', url: string, data?: unknown): Promise<T> {
+async function request<T>(
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+  url: string,
+  data?: unknown,
+  options?: { timeoutMs?: number },
+): Promise<T> {
   try {
     const response = await http.request<ApiResponse<T>>({
       method,
       url,
       data,
+      timeout: options?.timeoutMs,
     })
     const json = response.data
     if (json.code !== 0) {
@@ -1026,16 +1034,24 @@ export const api = {
     return request<null>('DELETE', `/ui-nl-tasks/${id}`)
   },
   executeUiNlTask(id: number) {
-    return request<UiNlTask>('POST', `/ui-nl-tasks/${id}/execute`)
+    return request<UiNlTask>('POST', `/ui-nl-tasks/${id}/execute`, undefined, {
+      timeoutMs: UI_NL_ACTION_TIMEOUT_MS,
+    })
   },
   interruptUiNlTask(id: number, reason?: string) {
-    return request<UiNlTask>('POST', `/ui-nl-tasks/${id}/interrupt`, { reason })
+    return request<UiNlTask>('POST', `/ui-nl-tasks/${id}/interrupt`, { reason }, {
+      timeoutMs: UI_NL_ACTION_TIMEOUT_MS,
+    })
   },
   cancelUiNlTask(id: number, reason?: string) {
-    return request<null>('POST', `/ui-nl-tasks/${id}/cancel`, { reason })
+    return request<null>('POST', `/ui-nl-tasks/${id}/cancel`, { reason }, {
+      timeoutMs: UI_NL_ACTION_TIMEOUT_MS,
+    })
   },
   runUiNlTask(id: number) {
-    return request<UiNlTask>('POST', `/ui-nl-tasks/${id}/run`)
+    return request<UiNlTask>('POST', `/ui-nl-tasks/${id}/run`, undefined, {
+      timeoutMs: UI_NL_ACTION_TIMEOUT_MS,
+    })
   },
   getUiNlTaskSteps(taskId: number, phase?: 'PLAN' | 'EXEC') {
     const q = new URLSearchParams()

@@ -228,9 +228,11 @@ onMounted(async () => {
           <el-option label="停用" value="DISABLED" />
         </el-select>
         <el-input v-model="keyword" clearable placeholder="标题/内容关键词" style="width: 240px" />
-        <el-button type="primary" @click="() => { pageNo = 1; loadRecords() }">查询</el-button>
-        <el-button @click="() => { projectId=''; versionId=''; status=''; keyword=''; pageNo=1; loadRecords() }">重置</el-button>
-        <el-button type="success" @click="openCreate">新增自然语言用例</el-button>
+        <div class="query-actions">
+          <el-button type="primary" @click="() => { pageNo = 1; loadRecords() }">查询</el-button>
+          <el-button @click="() => { projectId=''; versionId=''; status=''; keyword=''; pageNo=1; loadRecords() }">重置</el-button>
+          <el-button type="success" @click="openCreate">新增自然语言用例</el-button>
+        </div>
       </div>
     </el-card>
 
@@ -349,6 +351,7 @@ onMounted(async () => {
 <style scoped>
 .page-shell { height: 100%; display: grid; grid-template-rows: auto 1fr; gap: 12px; }
 .query-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.query-actions { margin-left: auto; display: inline-flex; gap: 10px; align-items: center; }
 .table-card { min-height: 0; display: flex; flex-direction: column; }
 .table-card :deep(.el-card__body) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .pager { display: flex; justify-content: flex-end; padding-top: 10px; }

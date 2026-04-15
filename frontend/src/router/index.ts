@@ -25,7 +25,7 @@ const router = createRouter({
   routes: [
     { path: '/', redirect: '/dashboard' },
     { path: '/login', component: LoginView, meta: { public: true, title: '登录' } },
-    { path: '/dashboard', component: DashboardView, meta: { requiresAuth: true, title: '看板' } },
+    { path: '/dashboard', component: DashboardView, meta: { requiresAuth: true, title: '工作台' } },
     { path: '/projects', component: ProjectsView, meta: { requiresAuth: true, title: '项目管理' } },
     { path: '/versions', component: VersionsView, meta: { requiresAuth: true, title: '版本管理' } },
     { path: '/assets', component: AssetsView, meta: { requiresAuth: true, title: '用例需求库' } },

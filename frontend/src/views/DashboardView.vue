@@ -48,6 +48,11 @@ const pendingTotal = ref(0)
 const runningTotal = ref(0)
 const completedTaskTotal = ref(0)
 const failedTaskTotal = ref(0)
+const uiPlanQueuedTotal = ref(0)
+const uiPlanPlanningTotal = ref(0)
+const uiPlanFailedTotal = ref(0)
+const uiExecRunningTotal = ref(0)
+const uiExecFailedTotal = ref(0)
 
 const exportQueuedTotal = ref(0)
 const exportRunningTotal = ref(0)
@@ -242,6 +247,25 @@ async function loadTasksPulse() {
   }
 }
 
+async function loadUiNlPulse() {
+  try {
+    const [queued, planning, planFailed, execRunning, execFailed] = await Promise.all([
+      api.getUiNlTasks({ status: 'QUEUED', pageNo: 1, pageSize: 1 }),
+      api.getUiNlTasks({ status: 'PLANNING', pageNo: 1, pageSize: 1 }),
+      api.getUiNlTasks({ status: 'FAILED', pageNo: 1, pageSize: 1 }),
+      api.getUiNlTasks({ lastExecStatus: 'RUNNING', pageNo: 1, pageSize: 1 }),
+      api.getUiNlTasks({ lastExecStatus: 'FAILED', pageNo: 1, pageSize: 1 }),
+    ])
+    uiPlanQueuedTotal.value = queued.total
+    uiPlanPlanningTotal.value = planning.total
+    uiPlanFailedTotal.value = planFailed.total
+    uiExecRunningTotal.value = execRunning.total
+    uiExecFailedTotal.value = execFailed.total
+  } catch (e) {
+    ElMessage.error((e as Error).message)
+  }
+}
+
 async function loadRecentExports() {
   exportsLoading.value = true
   try {
@@ -267,7 +291,14 @@ async function loadRecentChanges() {
 }
 
 async function refreshAll() {
-  await Promise.all([loadOverview(), loadProjectVersionMaps(), loadRecentChanges(), loadTasksPulse(), loadRecentExports()])
+  await Promise.all([
+    loadOverview(),
+    loadProjectVersionMaps(),
+    loadRecentChanges(),
+    loadTasksPulse(),
+    loadUiNlPulse(),
+    loadRecentExports(),
+  ])
   touchRefreshTime()
 }
 
@@ -353,10 +384,72 @@ const exportPulseSummary = computed(() => {
   return `导出排队 ${exportQueuedTotal.value} · 导出中 ${exportRunningTotal.value}`
 })
 
+const uiPulseSummary = computed(() => {
+  return `UI生成排队 ${uiPlanQueuedTotal.value} · UI生成中 ${uiPlanPlanningTotal.value} · UI执行中 ${uiExecRunningTotal.value}`
+})
+
+const reviewBacklogTotal = computed(() => pendingReviewFn.value + pendingReviewApi.value)
+const executionBacklogTotal = computed(() => notExecutedFn.value + notExecutedApi.value)
+const activeTaskTotal = computed(() => pendingTotal.value + queuedTotal.value + runningTotal.value)
+const uiActiveTotal = computed(() => uiPlanQueuedTotal.value + uiPlanPlanningTotal.value + uiExecRunningTotal.value)
+const uiFailureTotal = computed(() => uiPlanFailedTotal.value + uiExecFailedTotal.value)
+
+const generationSuccessRate = computed(() => {
+  const finished = completedTaskTotal.value + failedTaskTotal.value
+  if (finished <= 0) return '—'
+  const ratio = (completedTaskTotal.value / finished) * 100
+  return `${ratio.toFixed(1)}%`
+})
+
+const deliveryRiskMeta = computed(() => {
+  const highRisk =
+    failedTaskTotal.value >= 5 ||
+    uiFailureTotal.value >= 3 ||
+    reviewBacklogTotal.value >= 30 ||
+    executionBacklogTotal.value >= 60
+  const mediumRisk =
+    failedTaskTotal.value > 0 ||
+    uiFailureTotal.value > 0 ||
+    activeTaskTotal.value >= 10 ||
+    uiActiveTotal.value >= 10 ||
+    exportRunningTotal.value > 0 ||
+    exportQueuedTotal.value > 10
+
+  if (highRisk) {
+    return {
+      label: '高风险',
+      type: 'danger' as const,
+      tip: '建议优先处理失败任务与评审积压',
+      actionLabel: '处理失败任务',
+      actionPath: '/generation-tasks',
+      actionQuery: { status: 'FAILED' },
+    }
+  }
+  if (mediumRisk) {
+    return {
+      label: '关注中',
+      type: 'warning' as const,
+      tip: '存在在途任务或导出，建议持续跟进',
+      actionLabel: '查看在途任务',
+      actionPath: '/generation-tasks',
+      actionQuery: { status: 'RUNNING' },
+    }
+  }
+  return {
+    label: '健康',
+    type: 'success' as const,
+    tip: '当前流程整体平稳',
+    actionLabel: '查看任务中心',
+    actionPath: '/generation-tasks',
+    actionQuery: {} as Record<string, string>,
+  }
+})
+
 onMounted(async () => {
   await refreshAll()
   pollTimer = window.setInterval(() => {
     loadTasksPulse()
+    loadUiNlPulse()
   }, 5000)
 })
 
@@ -370,13 +463,9 @@ onUnmounted(() => {
 
 <template>
   <div class="dashboard">
-    <header class="dash-header">
-      <div class="dash-header-text">
-        <h1 class="dash-title">工作台</h1>
-        <p class="dash-desc">
-          汇总项目、版本、资产、用例与 UI 自然语言场景规模，跟踪生成任务与导出动态；点击数据卡片可跳转到对应模块。
-        </p>
-        <p v-if="lastRefreshAt" class="dash-updated">数据刷新于 {{ lastRefreshAt }}</p>
+    <section class="dash-toolbar">
+      <div class="dash-toolbar-left">
+        <span v-if="lastRefreshAt" class="dash-updated">数据刷新于 {{ lastRefreshAt }}</span>
       </div>
       <div class="dash-header-actions">
         <el-button type="primary" :loading="overviewLoading" @click="refreshAll">
@@ -392,7 +481,7 @@ onUnmounted(() => {
           导出中心
         </el-button>
       </div>
-    </header>
+    </section>
 
     <section v-loading="overviewLoading" class="kpi-section">
       <div class="kpi-grid">
@@ -442,8 +531,120 @@ onUnmounted(() => {
         <div class="insight-meta">
           <span class="insight-meta-line">{{ workQueueSummary }}</span>
           <span class="insight-meta-dot">|</span>
+          <span class="insight-meta-line">{{ uiPulseSummary }}</span>
+          <span class="insight-meta-dot">|</span>
           <span class="insight-meta-line">{{ exportPulseSummary }}</span>
         </div>
+      </div>
+    </section>
+
+    <section class="focus-section">
+      <div class="focus-grid">
+        <el-card shadow="never" class="focus-card">
+          <div class="focus-head">
+            <span class="focus-title">质量门禁</span>
+            <el-tag type="warning" effect="plain">优先处理</el-tag>
+          </div>
+          <div class="focus-metrics">
+            <div class="focus-metric">
+              <span>待评审</span>
+              <strong>{{ reviewBacklogTotal }}</strong>
+            </div>
+            <div class="focus-metric">
+              <span>未执行</span>
+              <strong>{{ executionBacklogTotal }}</strong>
+            </div>
+            <div class="focus-metric">
+              <span>生成成功率</span>
+              <strong>{{ generationSuccessRate }}</strong>
+            </div>
+          </div>
+          <div class="focus-actions">
+            <el-button link type="primary" @click="go('/test-cases', { reviewStatus: 'PENDING' })">处理功能评审</el-button>
+            <el-button link type="primary" @click="go('/api-test-cases', { reviewStatus: 'PENDING' })">处理接口评审</el-button>
+          </div>
+        </el-card>
+
+        <el-card shadow="never" class="focus-card">
+          <div class="focus-head">
+            <span class="focus-title">交付节奏</span>
+            <el-tag type="primary" effect="plain">在途监控</el-tag>
+          </div>
+          <div class="focus-metrics">
+            <div class="focus-metric">
+              <span>活动任务</span>
+              <strong>{{ activeTaskTotal }}</strong>
+            </div>
+            <div class="focus-metric">
+              <span>导出排队</span>
+              <strong>{{ exportQueuedTotal }}</strong>
+            </div>
+            <div class="focus-metric">
+              <span>导出进行中</span>
+              <strong>{{ exportRunningTotal }}</strong>
+            </div>
+          </div>
+          <div class="focus-actions">
+            <el-button link type="primary" @click="go('/generation-tasks')">查看任务中心</el-button>
+            <el-button link type="primary" @click="go('/exports')">查看导出中心</el-button>
+          </div>
+        </el-card>
+
+        <el-card shadow="never" class="focus-card">
+          <div class="focus-head">
+            <span class="focus-title">UI 任务态势</span>
+            <el-tag type="primary" effect="plain">UI自然语言</el-tag>
+          </div>
+          <div class="focus-metrics">
+            <div class="focus-metric">
+              <span>步骤生成在途</span>
+              <strong>{{ uiPlanQueuedTotal + uiPlanPlanningTotal }}</strong>
+            </div>
+            <div class="focus-metric">
+              <span>浏览器执行中</span>
+              <strong>{{ uiExecRunningTotal }}</strong>
+            </div>
+            <div class="focus-metric">
+              <span>UI失败待处理</span>
+              <strong>{{ uiFailureTotal }}</strong>
+            </div>
+          </div>
+          <div class="focus-actions">
+            <el-button link type="primary" @click="go('/ui-nl-tasks', { status: 'PLANNING' })">查看生成中</el-button>
+            <el-button link type="primary" @click="go('/ui-nl-steps')">步骤管理</el-button>
+            <el-button link type="primary" @click="go('/ui-nl-reports')">测试报告</el-button>
+          </div>
+        </el-card>
+
+        <el-card shadow="never" class="focus-card">
+          <div class="focus-head">
+            <span class="focus-title">风险预警</span>
+            <el-tag :type="deliveryRiskMeta.type" effect="dark">{{ deliveryRiskMeta.label }}</el-tag>
+          </div>
+          <div class="focus-risk">
+            <div class="risk-line">
+              <span>失败任务</span>
+              <strong>{{ failedTaskTotal }}</strong>
+            </div>
+            <div class="risk-line">
+              <span>已完成任务</span>
+              <strong>{{ completedTaskTotal }}</strong>
+            </div>
+            <p class="risk-tip">{{ deliveryRiskMeta.tip }}</p>
+          </div>
+          <div class="focus-actions">
+            <el-button link type="primary" @click="go(deliveryRiskMeta.actionPath, deliveryRiskMeta.actionQuery)">
+              {{ deliveryRiskMeta.actionLabel }}
+            </el-button>
+          </div>
+        </el-card>
+      </div>
+
+      <div class="scene-actions">
+        <el-button @click="go('/assets')">补充需求资产</el-button>
+        <el-button type="primary" @click="go('/generation-tasks')">发起生成任务</el-button>
+        <el-button @click="go('/ui-nl-tasks')">推进 UI 自然语言任务</el-button>
+        <el-button @click="go('/operation-logs')">查看最近变更</el-button>
       </div>
     </section>
 
@@ -603,39 +804,28 @@ onUnmounted(() => {
 .dashboard {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   min-height: 0;
   width: 100%;
   max-width: none;
 }
 
-.dash-header {
+.dash-toolbar {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 4px 2px 8px;
+  gap: 10px;
+  padding: 2px 2px 0;
 }
 
-.dash-title {
-  margin: 0 0 8px;
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--el-text-color-primary);
-  letter-spacing: 0.02em;
-}
-
-.dash-desc {
-  margin: 0;
-  max-width: 640px;
-  font-size: 13px;
-  line-height: 1.55;
-  color: var(--el-text-color-secondary);
+.dash-toolbar-left {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .dash-updated {
-  margin: 10px 0 0;
   font-size: 12px;
   color: var(--el-text-color-placeholder);
 }
@@ -785,6 +975,102 @@ onUnmounted(() => {
   user-select: none;
 }
 
+.focus-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.focus-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.focus-card :deep(.el-card__body) {
+  padding: 14px;
+}
+
+.focus-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.focus-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--el-text-color-primary);
+}
+
+.focus-metrics {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.focus-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--el-fill-color-lighter);
+}
+
+.focus-metric span {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.focus-metric strong {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--el-text-color-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.focus-risk {
+  margin-top: 12px;
+}
+
+.risk-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--el-text-color-regular);
+  line-height: 1.8;
+}
+
+.risk-line strong {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--el-text-color-primary);
+}
+
+.risk-tip {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.focus-actions {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.scene-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .dash-main {
   width: 100%;
   align-items: stretch;
@@ -896,5 +1182,11 @@ onUnmounted(() => {
 .dash-asset-tooltip {
   white-space: pre-line;
   max-width: 360px;
+}
+
+@media (max-width: 1280px) {
+  .focus-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
