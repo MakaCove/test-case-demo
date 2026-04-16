@@ -1,3 +1,11 @@
+"""
+UI NL Runner — FastAPI 入口。
+
+职责：
+- 启动时加载 .env（或回退 .env.example），并把 DashScope/Qwen 别名映射到 OPENAI_*（供 browser-use 使用）。
+- 提供 /health、/run、/runs/{id}、取消等 HTTP接口；可选 Bearer 鉴权（RUNNER_TOKEN）。
+- 具体浏览器 + LLM Agent 逻辑在 app.runner.service.RunnerService。
+"""
 from __future__ import annotations
 
 import os
@@ -8,10 +16,12 @@ from fastapi import FastAPI, Header, HTTPException
 from app.models.schemas import RunRequest, RunResponse, StatusResponse
 from app.runner.service import RunnerService
 
+# ui-runner 项目根目录（含 .env、runs/）
 BASE_DIR = Path(__file__).resolve().parents[1]
 
 
 def _load_env_file(path: Path) -> None:
+    """简易 KEY=VALUE 解析写入 os.environ，支持行内 # 已跳过、引号包裹的值。"""
     if not path.exists():
         return
     for raw in path.read_text(encoding="utf-8").splitlines():
@@ -27,6 +37,10 @@ def _load_env_file(path: Path) -> None:
 
 
 def _bootstrap_env() -> None:
+    """
+    进程启动时执行一次：优先 .env，否则读 .env.example。
+    将阿里云 DashScope 环境变量别名同步到 OPENAI_*，与 README 约定一致。
+    """
     env_file = BASE_DIR / ".env"
     env_source = ".env"
     if env_file.exists():
@@ -64,6 +78,7 @@ app = FastAPI(title="UI NL Runner", version="0.1.0")
 
 
 def _check_auth(authorization: str | None) -> None:
+    """若配置了 RUNNER_TOKEN，则要求请求头 Authorization: Bearer <token>。"""
     token = (os.getenv("RUNNER_TOKEN") or "").strip()
     if not token:
         return
@@ -76,11 +91,16 @@ def _check_auth(authorization: str | None) -> None:
 
 @app.get("/health")
 async def health():
+    """负载均衡 / 探活用，无需鉴权。"""
     return {"ok": True}
 
 
 @app.post("/run", response_model=RunResponse)
 async def run_task(req: RunRequest, authorization: str | None = Header(default=None)):
+    """
+    提交一次 UI 自动化任务（异步执行）：由后端传入 runId 与任务文本/规划步骤等。
+    立即返回 accepted；进度与结果通过 GET /runs/{run_id} 轮询。
+    """
     _check_auth(authorization)
     state = await service.submit_run(
         run_id=req.runId,
@@ -96,6 +116,9 @@ async def run_task(req: RunRequest, authorization: str | None = Header(default=N
 
 @app.get("/runs/{run_id}", response_model=StatusResponse)
 async def get_status(run_id: str, authorization: str | None = Header(default=None)):
+    """
+    查询单次 run 的状态；内存无缓存时尝试从 runs/<run_id>/result.json 恢复（便于进程重启后仍能查）。
+    """
     _check_auth(authorization)
     state = service.get_state(run_id)
     if state is None:
@@ -116,6 +139,7 @@ async def get_status(run_id: str, authorization: str | None = Header(default=Non
 
 @app.post("/runs/{run_id}/cancel")
 async def cancel_run(run_id: str, authorization: str | None = Header(default=None)):
+    """请求取消进行中的任务（具体是否可立刻停取决于 RunnerService 实现）。"""
     _check_auth(authorization)
     await service.cancel_run(run_id)
     return {"ok": True}

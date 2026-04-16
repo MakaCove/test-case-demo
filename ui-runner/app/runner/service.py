@@ -1,3 +1,10 @@
+"""
+Runner 核心：browser-use Agent + 浏览器配置、任务拼装、历史转 StepResult、runs/ 落盘。
+
+流程概要：RunnerService.submit_run 创建 RunState 与后台协程 _execute；
+_execute 内构建 LLM/Browser/Agent，wait_for(agent.run)；成功或失败/取消后写 result.json，
+必要时复制截图到 runs/<runId>/shots/。
+"""
 from __future__ import annotations
 
 import asyncio
@@ -18,10 +25,12 @@ from app.models.schemas import PlannedStep, StepResult
 
 
 def _now_iso() -> str:
+    """写入 result.json 的 updatedAt 时间戳（秒精度 ISO）。"""
     return datetime.now().isoformat(timespec="seconds")
 
 
 def _expect_text_from_json(expect_json: Optional[str]) -> str:
+    """从 expectJson 解析展示用预期文案：若为 JSON 且含 expected_result 则取其值，否则返回原文。"""
     if not expect_json or not expect_json.strip():
         return "（无单独预期描述，以本步操作说明为准）"
     raw = expect_json.strip()
@@ -36,6 +45,7 @@ def _expect_text_from_json(expect_json: Optional[str]) -> str:
 
 
 def _env_flag(name: str) -> bool:
+    """环境变量是否为真：1/true/yes/on（大小写不敏感）。"""
     return (os.getenv(name) or "").strip().lower() in ("1", "true", "yes", "on")
 
 
@@ -106,6 +116,10 @@ def _fix_browser_window_maximized(browser: Browser, headless: bool) -> None:
 
 
 def _build_execution_task(task_text: str, planned: Optional[List[PlannedStep]], base_url: Optional[str]) -> str:
+    """
+    拼出传给 Agent 的 task 字符串：语言/窗口等行为约束 + 用户原文 + 规划步骤（含预期），
+    可选前缀「先打开 baseUrl」。
+    """
     chunks: List[str] = [
         "【语言】全程使用简体中文输出：思考、评估、下一步目标(next_goal)、向用户说明的文字均用中文（URL、代码、英文专有名词可保留原文）。",
         "【窗口】有界面模式下默认使用 Chrome --start-maximized；若配置了 BROWSER_WINDOW_SIZE 则为固定窗口。不要用页面脚本改窗口大小。"
@@ -143,6 +157,10 @@ def _build_execution_task(task_text: str, planned: Optional[List[PlannedStep]], 
 def _history_to_step_results(
     history: AgentHistoryList, run_dir: Path, planned_steps: Optional[List[PlannedStep]] = None
 ) -> List[StepResult]:
+    """
+    将 browser-use的 AgentHistoryList 转为 StepResult 列表：与规划步骤对齐 expect/input，
+    复制截图到 run_dir/shots/，rawLog 聚合 evaluation/memory/next_goal 等。
+    """
     out: List[StepResult] = []
     if not history or not history.history:
         return out
@@ -272,6 +290,7 @@ def _history_to_step_results(
 
 
 def _summary_from_history(history: AgentHistoryList) -> str:
+    """优先 history.final_result()，否则退化为 str(history) 截断。"""
     try:
         fr = history.final_result()
         if fr:
@@ -286,6 +305,11 @@ def _summary_from_history(history: AgentHistoryList) -> str:
 
 @dataclass
 class RunState:
+    """
+    单次 run 的内存状态：与 result.json 字段对应。
+    task_ref：后台 _execute 协程；agent_ref：当前 Agent，cancel 时先 stop() 再 cancel 任务，避免卡在 agent.run()。
+    """
+
     run_id: str
     status: str = "PENDING"
     summary: Optional[str] = None
@@ -293,11 +317,12 @@ class RunState:
     artifacts_json: Optional[str] = None
     steps: List[StepResult] = field(default_factory=list)
     task_ref: Optional[asyncio.Task] = None
-    """当前执行的 Agent，供 /runs/{id}/cancel 调用 stop() 协作退出。"""
     agent_ref: Optional[Agent] = field(default=None, repr=False)
 
 
 class RunnerService:
+    """管理 runs/ 目录、内存状态字典，以及异步执行与落盘。"""
+
     def __init__(self, base_dir: Path):
         self.base_dir = base_dir
         self.runs_dir = self.base_dir / "runs"
@@ -305,12 +330,15 @@ class RunnerService:
         self._states: Dict[str, RunState] = {}
 
     def get_state(self, run_id: str) -> Optional[RunState]:
+        """仅查内存中的运行状态（重启进程后需 load_state_from_disk）。"""
         return self._states.get(run_id)
 
     def remember_state(self, state: RunState) -> None:
+        """将状态放入内存映射（一般由 submit_run 内部使用）。"""
         self._states[state.run_id] = state
 
     def load_state_from_disk(self, run_id: str) -> Optional[RunState]:
+        """从 runs/<runId>/result.json 恢复 RunState（无文件或解析失败则 None）。"""
         path = self.runs_dir / run_id / "result.json"
         if not path.is_file():
             return None
@@ -344,6 +372,9 @@ class RunnerService:
         model: Optional[str],
         timeout_seconds: int,
     ) -> RunState:
+        """
+        若该 runId 已在 PENDING/RUNNING，直接返回已有状态；否则新建 RunState 并启动 _execute 后台任务。
+        """
         state = self._states.get(run_id)
         if state and state.status in {"PENDING", "RUNNING"}:
             return state
@@ -356,6 +387,7 @@ class RunnerService:
         return state
 
     async def cancel_run(self, run_id: str) -> None:
+        """协作取消：Agent.stop() +取消 asyncio Task，状态置 CANCELLED 并持久化。"""
         state = self._states.get(run_id)
         if not state:
             return
@@ -381,6 +413,10 @@ class RunnerService:
         model: Optional[str],
         timeout_seconds: int,
     ) -> None:
+        """
+        单条 run 的完整执行：ChatOpenAI + Browser + Agent，超时用 wait_for；
+        成功写 steps/artifacts；CancelledError 与 Exception 分支尽量保留已有 history 再落盘。
+        """
         state.status = "RUNNING"
         self._persist_state(state)
         run_dir = self.runs_dir / state.run_id
@@ -480,6 +516,7 @@ class RunnerService:
             state.agent_ref = None
 
     def _persist_state(self, state: RunState) -> None:
+        """将当前状态写入 runs/<runId>/result.json（供轮询与进程外读取）。"""
         run_dir = self.runs_dir / state.run_id
         run_dir.mkdir(parents=True, exist_ok=True)
         payload = {
