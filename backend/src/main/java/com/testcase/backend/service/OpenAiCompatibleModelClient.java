@@ -18,6 +18,9 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
 
+/**
+ * OpenAI 兼容 Chat Completions HTTP 客户端：支持纯文本与多模态（vision 失败时可降级为纯文本重试）。
+ */
 @Service
 public class OpenAiCompatibleModelClient implements ModelClient {
     private static final Logger log = LoggerFactory.getLogger(OpenAiCompatibleModelClient.class);

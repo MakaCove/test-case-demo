@@ -8,6 +8,10 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * 需求/原型资产表 {@code requirement_assets}：
+ * TEXT 纯文本、FILE 上传解析后的正文、PROTOTYPE 等；{@code asset_type} 为业务枚举大写字符串。
+ */
 @Data
 @TableName("requirement_assets")
 public class RequirementAssetEntity {
@@ -23,6 +27,7 @@ public class RequirementAssetEntity {
     @TableField("asset_code")
     private String assetCode;
 
+    /** 批次/分组键，用于前端多选与批量删除 */
     @TableField("relation_code")
     private String relationCode;
 
@@ -30,8 +35,10 @@ public class RequirementAssetEntity {
     private String assetType;
 
     private String title;
+    /** FILE 类型可为抽取后的纯文本；PROTOTYPE 可能为空 */
     private String content;
 
+    /** 原型等二进制相对存储根路径的路径 */
     @TableField("file_path")
     private String filePath;
 
@@ -44,6 +51,7 @@ public class RequirementAssetEntity {
     @TableField("mime_type")
     private String mimeType;
 
+    /** MANUAL | UPLOAD 等 */
     private String source;
 
     @TableField("created_by")

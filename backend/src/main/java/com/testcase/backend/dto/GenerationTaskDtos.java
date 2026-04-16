@@ -5,11 +5,16 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * AI 生成用例任务：提交参数、列表项、详情、中断与更新（非 RUNNING 时可改模型/模板/引用资产等）。
+ */
 public class GenerationTaskDtos {
 
     /** 列表/详情中展示：任务目标版本下的需求资产（与生成上下文一致） */
     public record RequirementAssetBrief(String assetCode, String title, String assetType) {
     }
+
+    /** POST 提交生成任务 */
     public record SubmitTaskRequest(
             @NotNull(message = "projectId is required") Long projectId,
             @NotNull(message = "versionId is required") Long versionId,
@@ -25,6 +30,7 @@ public class GenerationTaskDtos {
     ) {
     }
 
+    /** 任务摘要行 */
     public record TaskItem(
             Long id,
             Long projectId,
@@ -49,6 +55,7 @@ public class GenerationTaskDtos {
     ) {
     }
 
+    /** 详情：在 {@link TaskItem} 基础上增加原始 payload 与结果摘要 */
     public record TaskDetail(
             TaskItem task,
             List<Long> referenceVersionIds,
@@ -65,7 +72,10 @@ public class GenerationTaskDtos {
     ) {
     }
 
-    /** Update task parameters when not RUNNING (e.g. before start or before retry/regenerate). */
+    /**
+     * 更新任务参数：仅在非 RUNNING 时允许（如启动前、重试/重新生成前）。
+     * {@code referenceAssetRelationCodes} 为空表示沿用原任务。
+     */
     public record UpdateTaskRequest(
             @NotNull(message = "modelConfigId is required") Long modelConfigId,
             @NotNull(message = "promptTemplateId is required") Long promptTemplateId,
@@ -79,4 +89,3 @@ public class GenerationTaskDtos {
     ) {
     }
 }
-

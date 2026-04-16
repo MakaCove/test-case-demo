@@ -9,6 +9,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+/**
+ * 除注册/登录等白名单外，对 {@code /api/**} 请求做 Bearer Token 校验。
+ * <p>
+ * 校验通过后将 {@code loginUserId}、{@code loginUsername} 写入 request attribute，供 Controller 使用；
+ * 预检请求 OPTIONS 直接放行（与 CORS 配合）。
+ */
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
     private static final Logger log = LoggerFactory.getLogger(AuthInterceptor.class);
@@ -37,6 +43,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         return true;
     }
 
+    /** 解析 {@code Authorization: Bearer &lt;token&gt;}；若无 Bearer 前缀则整段视为 token（兼容部分客户端）。 */
     private String extractBearerToken(String authorization) {
         if (authorization == null || authorization.isBlank()) {
             return null;

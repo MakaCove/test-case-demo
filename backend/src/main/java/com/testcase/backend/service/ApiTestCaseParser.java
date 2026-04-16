@@ -13,8 +13,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Parses LLM output for API test cases: top-level {@code {"cases":[...]}} with
- * requestJson, expectedJson, assertionsJson (objects or arrays; stored as JSON strings).
+ * 解析 LLM 返回中的接口用例 JSON：支持代码块围栏、根数组或 {@code cases}/{@code apiCases}/{@code testCases}；
+ * {@code requestJson}/{@code expectedJson}/{@code assertionsJson} 统一序列化为字符串供入库。
  */
 @Component
 public class ApiTestCaseParser {
@@ -27,6 +27,7 @@ public class ApiTestCaseParser {
         this.objectMapper = objectMapper;
     }
 
+    /** @param raw 模型原始输出文本 */
     public List<ApiCaseDraft> parse(String raw) {
         List<ApiCaseDraft> out = new ArrayList<>();
         if (!StringUtils.hasText(raw)) {
@@ -202,6 +203,7 @@ public class ApiTestCaseParser {
         return null;
     }
 
+    /** 单条接口用例草稿，供 {@link ApiTestCaseService} 落库 */
     public record ApiCaseDraft(
             String moduleName,
             String featureName,

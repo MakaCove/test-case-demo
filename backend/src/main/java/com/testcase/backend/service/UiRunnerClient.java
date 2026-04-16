@@ -21,6 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Python ui-runner（FastAPI）HTTP 客户端：{@code /run}、{@code /runs/{id}}、取消等；强制 HTTP/1.1 以规避部分环境下 h2 兼容问题。
+ */
 @Component
 public class UiRunnerClient {
     private static final Logger log = LoggerFactory.getLogger(UiRunnerClient.class);

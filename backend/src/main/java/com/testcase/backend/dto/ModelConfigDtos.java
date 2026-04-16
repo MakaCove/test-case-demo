@@ -5,6 +5,10 @@ import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 
+/**
+ * 大模型连接配置：创建/更新体及连通性测试可选 prompt。
+ * {@code apiKeyEncrypted} 为前端或网关加密后的密文，服务端按约定存储。
+ */
 public class ModelConfigDtos {
     public record CreateRequest(
             @NotBlank(message = "name is required") String name,
@@ -28,9 +32,9 @@ public class ModelConfigDtos {
     ) {
     }
 
+    /** POST test-connection 可选自定义探测文案 */
     public record TestConnectionRequest(
             String prompt
     ) {
     }
 }
-

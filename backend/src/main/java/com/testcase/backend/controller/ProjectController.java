@@ -28,6 +28,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDateTime;
 
+/**
+ * 项目主数据：创建（code 唯一）、分页列表、详情、更新、软删、批量归档。
+ */
 @RestController
 @RequestMapping("/api/v1/projects")
 public class ProjectController {
@@ -71,6 +74,7 @@ public class ProjectController {
         return ApiResponse.success(toDomain(entity));
     }
 
+    /** 支持按名称、编码筛选及 sortBy/sortOrder（id|name|code|createdAt） */
     @GetMapping
     public ApiResponse<PagedResult<Project>> listProjects(
             @RequestParam(defaultValue = "1") int pageNo,
@@ -170,6 +174,9 @@ public class ProjectController {
         return ApiResponse.success(null);
     }
 
+    /**
+     * MVP 仅支持 {@code ARCHIVE}：批量软删项目。
+     */
     @PostMapping("/batch-update")
     public ApiResponse<Void> batchUpdate(@RequestBody ProjectDtos.BatchUpdateProjectRequest request) {
         log.info("batch update projects request, action={}, size={}", request.action(), request.ids() == null ? 0 : request.ids().size());
@@ -194,6 +201,7 @@ public class ProjectController {
         return ApiResponse.success(null);
     }
 
+    /** 领域模型展示用 owner 暂固定为 admin */
     private Project toDomain(ProjectEntity entity) {
         return new Project(
                 entity.getId(),

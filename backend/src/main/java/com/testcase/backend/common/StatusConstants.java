@@ -11,6 +11,7 @@ public final class StatusConstants {
     private StatusConstants() {
     }
 
+    /** 功能开关：启用 / 禁用 */
     public static final class Switch {
         public static final String ENABLED = "ENABLED";
         public static final String DISABLED = "DISABLED";
@@ -19,6 +20,7 @@ public final class StatusConstants {
         }
     }
 
+    /** 用例/文档版本生命周期 */
     public static final class Version {
         public static final String DRAFT = "DRAFT";
         public static final String PUBLISHED = "PUBLISHED";
@@ -27,6 +29,7 @@ public final class StatusConstants {
         }
     }
 
+    /** AI 生成任务队列与执行状态 */
     public static final class GenerationTask {
         public static final String PENDING = "PENDING";
         public static final String QUEUED = "QUEUED";
@@ -39,6 +42,7 @@ public final class StatusConstants {
         }
     }
 
+    /** 导出任务状态 */
     public static final class Export {
         public static final String RUNNING = "RUNNING";
         public static final String SUCCESS = "SUCCESS";
@@ -48,6 +52,7 @@ public final class StatusConstants {
         }
     }
 
+    /** 用例评审结论 */
     public static final class CaseReview {
         public static final String PENDING = "PENDING";
         public static final String APPROVED = "APPROVED";
@@ -57,6 +62,7 @@ public final class StatusConstants {
         }
     }
 
+    /** 用例是否已执行及结果概要 */
     public static final class CaseExecution {
         public static final String NOT_EXECUTED = "NOT_EXECUTED";
         public static final String EXECUTED = "EXECUTED";
@@ -66,6 +72,11 @@ public final class StatusConstants {
         }
     }
 
+    /**
+     * UI 自然语言任务：规划流水线状态 + 最近一次对接 Runner 的执行状态。
+     * <p>
+     * 「规划」与「执行」阶段可能先后出现同名语义（如 FAILED），以业务字段/上下文区分。
+     */
     public static final class UiNlTask {
         /** 规划状态 */
         public static final String PENDING = "PENDING";

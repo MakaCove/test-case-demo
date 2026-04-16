@@ -8,6 +8,10 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * UI NL 执行报告表 {@code ui_nl_reports}：汇总一步执行结果、统计与 HTML 报告路径；
+ * {@code artifacts_json} 存 Runner 侧产物索引等。
+ */
 @Data
 @TableName("ui_nl_reports")
 public class UiNlReportEntity {

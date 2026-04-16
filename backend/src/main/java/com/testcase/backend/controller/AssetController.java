@@ -46,6 +46,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * 需求与原型资产：纯文本、需求文档上传（抽取正文入库，不保留原件）、原型文件落盘。
+ * <p>
+ * 路由前缀 {@code /api/v1}，与版本、项目关联；变更写入 {@link com.testcase.backend.service.OperationLogService}。
+ * 存储路径由 {@code app.storage.base-path}、{@code app.storage.prototype-base-path} 配置。
+ */
 @RestController
 @RequestMapping("/api/v1")
 public class AssetController {
@@ -80,6 +86,7 @@ public class AssetController {
         this.documentTextExtractor = documentTextExtractor;
     }
 
+    /** 在版本下创建纯文本需求资产 */
     @PostMapping("/versions/{versionId}/requirements/text")
     public ApiResponse<AssetDtos.AssetItem> createTextAsset(
             @PathVariable Long versionId,
@@ -106,6 +113,7 @@ public class AssetController {
         return ApiResponse.success(toItem(entity));
     }
 
+    /** 上传需求文档：解析为纯文本写入 {@code content}，磁盘不保留上传文件 */
     @PostMapping(value = "/versions/{versionId}/requirements/files", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<AssetDtos.AssetItem> uploadRequirementFile(
             @PathVariable Long versionId,
@@ -116,6 +124,7 @@ public class AssetController {
         return ApiResponse.success(saveRequirementDocumentExtracted(versionId, file, relationCode, title));
     }
 
+    /** 上传原型图/文件：二进制保存到原型目录，库中存相对路径 */
     @PostMapping(value = "/versions/{versionId}/prototypes/files", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<AssetDtos.AssetItem> uploadPrototypeFile(
             @PathVariable Long versionId,
@@ -125,6 +134,7 @@ public class AssetController {
         return ApiResponse.success(savePrototypeToConfiguredFolder(versionId, file, relationCode));
     }
 
+    /** 某版本下资产分页列表 */
     @GetMapping("/versions/{versionId}/assets")
     public ApiResponse<PagedResult<AssetDtos.AssetItem>> listAssets(
             @PathVariable Long versionId,
@@ -151,6 +161,7 @@ public class AssetController {
         return ApiResponse.success(new PagedResult<>(records, safePageNo, safePageSize, page.getTotal()));
     }
 
+    /** 跨版本/项目资产分页（可选 projectId、versionId、relationCode 等过滤） */
     @GetMapping("/assets")
     public ApiResponse<PagedResult<AssetDtos.AssetItem>> listAllAssets(
             @RequestParam(defaultValue = "1") int pageNo,
@@ -186,6 +197,7 @@ public class AssetController {
         return ApiResponse.success(new PagedResult<>(records, safePageNo, safePageSize, page.getTotal()));
     }
 
+    /** 更新标题；TEXT/FILE 类型可改正文 */
     @PutMapping("/assets/{assetId}")
     public ApiResponse<AssetDtos.AssetItem> updateAsset(
             @PathVariable Long assetId,
@@ -210,6 +222,7 @@ public class AssetController {
         return ApiResponse.success(toItem(entity));
     }
 
+    /** 单条资产详情 */
     @GetMapping("/assets/{assetId}")
     public ApiResponse<AssetDtos.AssetItem> getAsset(@PathVariable Long assetId) {
         var entity = requirementAssetMapper.selectById(assetId);
@@ -219,6 +232,7 @@ public class AssetController {
         return ApiResponse.success(toItem(entity));
     }
 
+    /** 软删单条资产 */
     @DeleteMapping("/assets/{assetId}")
     public ApiResponse<Void> deleteAsset(@PathVariable Long assetId) {
         LocalDateTime now = LocalDateTime.now();
@@ -234,6 +248,9 @@ public class AssetController {
         return ApiResponse.success(null);
     }
 
+    /**
+     * 按 relationCode 或 {@code LEGACY-&lt;id&gt;} 批量软删；用于前端按分组清理。
+     */
     @PostMapping("/assets/batch-delete")
     public ApiResponse<Void> batchDelete(@RequestBody AssetDtos.BatchDeleteRequest request) {
         LocalDateTime now = LocalDateTime.now();
@@ -369,6 +386,7 @@ public class AssetController {
         return toItem(entity);
     }
 
+    /** 校验版本与所属项目存在且未删除 */
     private VersionContext assertVersionExists(Long versionId) {
         ProjectVersionEntity version = projectVersionMapper.selectById(versionId);
         if (version == null || version.getIsDeleted() == 1) {
@@ -381,14 +399,17 @@ public class AssetController {
         return new VersionContext(project, version);
     }
 
+    /** 资产业务编号：AST-版本ID-随机后缀 */
     private String generateAssetCode(Long versionId) {
         return "AST-" + versionId + "-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 
+    /** 项目编码与版本号拼接，用于 relation 分组键的一部分 */
     private String buildRelationCode(ProjectEntity project, ProjectVersionEntity version) {
         return project.getCode() + ":" + version.getVersionNo();
     }
 
+    /** 调用方指定则用其值，否则生成 RC-项目:版本-随机 形式 */
     private String resolveRelationCode(String relationCode, ProjectEntity project, ProjectVersionEntity version) {
         if (StringUtils.hasText(relationCode)) {
             return relationCode.trim();
@@ -396,6 +417,7 @@ public class AssetController {
         return "RC-" + buildRelationCode(project, version) + "-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 
+    /** 批量转 DTO，并预加载项目/版本名称避免 N+1 */
     private List<AssetDtos.AssetItem> toItems(List<RequirementAssetEntity> rows) {
         if (rows == null || rows.isEmpty()) {
             return List.of();

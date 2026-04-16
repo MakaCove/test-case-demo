@@ -20,7 +20,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 /**
- * 从上传的需求文档中提取纯文本，写入 {@code requirement_assets.content}。
+ * 从上传的需求文档提取纯文本写入 {@code requirement_assets.content}：
+ * 纯文本后缀直接按 UTF-8 读，其余走 Apache Tika；超长正文截断至 {@link #MAX_CHARS}。
  */
 @Service
 public class DocumentTextExtractor {
@@ -31,6 +32,7 @@ public class DocumentTextExtractor {
     private final AutoDetectParser parser = new AutoDetectParser();
     private final Tika tika = new Tika();
 
+    /** @throws IllegalArgumentException 空文件或解析失败 */
     public String extractAsPlainText(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("file is required");

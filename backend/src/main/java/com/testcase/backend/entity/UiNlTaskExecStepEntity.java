@@ -8,6 +8,10 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * UI 任务执行轨迹表 {@code ui_nl_task_exec_steps}：对接 Runner 后每步真实结果（截图路径、耗时、原始日志等），
+ * 与规划表 {@link UiNlTaskStepEntity} 区分。
+ */
 @Data
 @TableName("ui_nl_task_exec_steps")
 public class UiNlTaskExecStepEntity {

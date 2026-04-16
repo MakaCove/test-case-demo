@@ -8,6 +8,11 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * 导出任务表 {@code export_records}：异步生成 Markdown 等产物；
+ * {@code request_json} 结构见 {@link com.testcase.backend.dto.ExportRequestOptions}；
+ * {@code status} 见 {@link com.testcase.backend.common.StatusConstants.Export}。
+ */
 @Data
 @TableName("export_records")
 public class ExportRecordEntity {
@@ -27,9 +32,11 @@ public class ExportRecordEntity {
     private String scope;
     private String status;
 
+    /** 导出选项 JSON */
     @TableField("request_json")
     private String requestJson;
 
+    /** 生成文件相对/绝对路径 */
     @TableField("file_path")
     private String filePath;
 
@@ -51,4 +58,3 @@ public class ExportRecordEntity {
     @TableField("is_deleted")
     private Integer isDeleted;
 }
-

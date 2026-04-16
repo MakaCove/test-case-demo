@@ -29,6 +29,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * 生成任务后台执行器：定时推进队列、拉取 QUEUED/RUNNING 任务，拼装 Prompt与需求上下文（含原型图 base64）调用 {@link ModelClient}，
+ * 按 {@code case_category} 走 {@link TestCaseService} 或 {@link ApiTestCaseService} 落库；受 {@link #manualQueueEnabled} 等开关影响。
+ */
 @Component
 public class GenerationTaskRunner {
     private static final Logger log = LoggerFactory.getLogger(GenerationTaskRunner.class);

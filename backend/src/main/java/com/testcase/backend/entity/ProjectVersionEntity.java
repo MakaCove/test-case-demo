@@ -8,6 +8,10 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * 项目版本表 {@code project_versions}：{@code version_no} 在同一 {@code project_id} 下唯一；
+ * {@code status} 见 {@link com.testcase.backend.common.StatusConstants.Version}。
+ */
 @Data
 @TableName("project_versions")
 public class ProjectVersionEntity {

@@ -7,7 +7,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 接口/API 用例相关传输对象：列表项、详情、创建/更新、批量与状态补丁。
+ * 与 {@link com.testcase.backend.controller.ApiTestCaseController} 及 API 用例实体字段对应。
+ */
 public class ApiTestCaseDtos {
+    /** 列表中展示的需求资产摘要 */
     public record RequirementAssetBrief(
             String assetCode,
             String title,
@@ -15,6 +20,10 @@ public class ApiTestCaseDtos {
     ) {
     }
 
+    /**
+     * 列表/简要详情：含请求体、预期、断言等 JSON 字符串及执行/评审状态；
+     * {@code requirementAssets} 为展示用关联需求。
+     */
     public record CaseItem(
             Long id,
             String caseNo,
@@ -49,9 +58,11 @@ public class ApiTestCaseDtos {
     ) {
     }
 
+    /** 详情包装：目前仅内含 {@link CaseItem} */
     public record CaseDetail(CaseItem testCase) {
     }
 
+    /** POST创建接口用例 */
     public record CreateRequest(
             @NotNull(message = "projectId is required") Long projectId,
             @NotNull(message = "versionId is required") Long versionId,
@@ -67,6 +78,7 @@ public class ApiTestCaseDtos {
     ) {
     }
 
+    /** PUT 全量更新（不含状态字段时用 {@link UpdateStatusRequest}） */
     public record UpdateRequest(
             @NotBlank(message = "moduleName is required") String moduleName,
             @NotBlank(message = "featureName is required") String featureName,
@@ -79,6 +91,7 @@ public class ApiTestCaseDtos {
     ) {
     }
 
+    /** 批量改字段：{@code fields} 为服务端约定的补丁键值 */
     public record BatchUpdateRequest(
             List<Long> ids,
             Map<String, Object> fields,
@@ -87,6 +100,7 @@ public class ApiTestCaseDtos {
     ) {
     }
 
+    /** PATCH 执行/评审状态及备注 */
     public record UpdateStatusRequest(
             String executionStatus,
             String reviewStatus,
@@ -95,6 +109,7 @@ public class ApiTestCaseDtos {
     ) {
     }
 
+    /** 批量删除 */
     public record BatchDeleteRequest(
             @NotNull(message = "ids is required") List<Long> ids
     ) {

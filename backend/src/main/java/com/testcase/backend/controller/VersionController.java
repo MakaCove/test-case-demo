@@ -29,6 +29,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * 项目版本：在某项目下创建/列表、跨项目分页列表、详情、更新、软删、发布，
+ * 以及版本对比占位接口（MVP 返回固定格式摘要）。
+ */
 @RestController
 @RequestMapping("/api/v1")
 public class VersionController {
@@ -122,6 +126,7 @@ public class VersionController {
         return ApiResponse.success(new PagedResult<>(records, safePageNo, safePageSize, page.getTotal()));
     }
 
+    /** 不按项目限定时的全局版本列表，可选 projectId 过滤 */
     @GetMapping("/versions")
     public ApiResponse<PagedResult<ProjectVersion>> listAllVersions(
             @RequestParam(defaultValue = "1") int pageNo,
@@ -226,6 +231,7 @@ public class VersionController {
         return ApiResponse.success(null);
     }
 
+    /** 将状态置为 {@link StatusConstants.Version#PUBLISHED} */
     @PostMapping("/versions/{versionId}/publish")
     public ApiResponse<ProjectVersion> publishVersion(@PathVariable Long versionId) {
         log.info("publish version request, versionId={}", versionId);
@@ -243,6 +249,7 @@ public class VersionController {
         return ApiResponse.success(toDomain(entity));
     }
 
+    /** MVP：仅返回两版本号拼接的占位文案，非真实 diff */
     @GetMapping("/versions/compare")
     public ApiResponse<String> compareVersions(
             @RequestParam Long leftVersionId,

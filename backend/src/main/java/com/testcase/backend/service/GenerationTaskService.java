@@ -33,6 +33,9 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * 生成任务生命周期：提交为 PENDING、启动入队、取消/中断/重试、更新参数；维护 {@link GenerationTaskRefEntity} 与 payload JSON。
+ */
 @Service
 public class GenerationTaskService {
     private static final Logger log = LoggerFactory.getLogger(GenerationTaskService.class);

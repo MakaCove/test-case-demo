@@ -8,6 +8,10 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * 接口/API 测试用例表 {@code api_test_cases}：请求体、预期、断言等以 JSON 字符串存储；
+ * 执行/评审状态见 {@link com.testcase.backend.common.StatusConstants} 各子类。
+ */
 @Data
 @TableName("api_test_cases")
 public class ApiTestCaseEntity {
@@ -23,6 +27,7 @@ public class ApiTestCaseEntity {
     @TableField("version_id")
     private Long versionId;
 
+    /** 来源 AI 生成任务 ID，手工创建可为 null */
     @TableField("source_task_id")
     private Long sourceTaskId;
 
@@ -34,12 +39,15 @@ public class ApiTestCaseEntity {
 
     private String title;
 
+    /** HTTP 请求描述（JSON） */
     @TableField("request_json")
     private String requestJson;
 
+    /** 预期结果（JSON） */
     @TableField("expected_json")
     private String expectedJson;
 
+    /** 断言规则（JSON） */
     @TableField("assertions_json")
     private String assertionsJson;
 

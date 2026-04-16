@@ -8,6 +8,11 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * AI 生成用例任务表 {@code generation_tasks}：队列、模型与模板引用、提交/起止时间；
+ * {@code status} 见 {@link com.testcase.backend.common.StatusConstants.GenerationTask}；
+ * 引用版本多对多关系见 {@link GenerationTaskRefEntity}。
+ */
 @Data
 @TableName("generation_tasks")
 public class GenerationTaskEntity {
@@ -59,6 +64,7 @@ public class GenerationTaskEntity {
     @TableField("case_category")
     private String caseCategory;
 
+    /** 提交参数快照 JSON（引用资产、策略等） */
     @TableField("payload_json")
     private String payloadJson;
 
@@ -74,4 +80,3 @@ public class GenerationTaskEntity {
     @TableField("is_deleted")
     private Integer isDeleted;
 }
-

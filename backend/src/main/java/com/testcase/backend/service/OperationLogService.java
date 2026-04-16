@@ -15,6 +15,9 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.List;
 
+/**
+ * 操作审计：将 before/after 序列化为 JSON 落库；操作人从当前请求 {@code loginUserId}/{@code loginUsername} 解析，缺省为 admin。
+ */
 @Service
 public class OperationLogService {
     private static final Logger log = LoggerFactory.getLogger(OperationLogService.class);

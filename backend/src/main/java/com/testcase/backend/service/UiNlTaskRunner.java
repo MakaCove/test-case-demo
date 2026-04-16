@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * UI NL 后台调度：定时拉取 QUEUED 任务做规划、轮询 RUNNING 任务向 {@link UiRunnerClient} 对齐状态（互斥锁防重入）。
+ */
 @Component
 public class UiNlTaskRunner {
     private static final Logger log = LoggerFactory.getLogger(UiNlTaskRunner.class);

@@ -8,6 +8,9 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * 用户表 {@code users}：登录名唯一；{@code password_hash} 为 BCrypt 等单向哈希，不存明文。
+ */
 @Data
 @TableName("users")
 public class UserEntity {

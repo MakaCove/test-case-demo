@@ -8,6 +8,10 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * UI NL 执行任务表 {@code ui_nl_tasks}：规划流水线与对接外部 Runner 的执行分轨；
+ * {@code status} 多为规划阶段；{@code last_exec_status} 为最近一轮真实浏览器执行结果。
+ */
 @Data
 @TableName("ui_nl_tasks")
 public class UiNlTaskEntity {
@@ -50,6 +54,7 @@ public class UiNlTaskEntity {
     @TableField("exec_finished_at")
     private LocalDateTime execFinishedAt;
 
+    /** 与 ui-runner 返回的 runId 对齐 */
     @TableField("runner_run_id")
     private String runnerRunId;
 
@@ -59,6 +64,7 @@ public class UiNlTaskEntity {
     @TableField("prompt_template_id")
     private Long promptTemplateId;
 
+    /** 0/1 与布尔对应 */
     private Integer headless;
 
     @TableField("browser_name")

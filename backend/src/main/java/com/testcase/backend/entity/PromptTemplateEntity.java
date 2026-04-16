@@ -8,6 +8,10 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * 提示词模板表 {@code prompt_templates}：可按 {@code scope_type}/{@code scope_id} 绑定项目等；
+ * {@code version_no} 为内容修订序号；{@code status} 见 {@link com.testcase.backend.common.StatusConstants.Switch}。
+ */
 @Data
 @TableName("prompt_templates")
 public class PromptTemplateEntity {
@@ -44,4 +48,3 @@ public class PromptTemplateEntity {
     @TableField("is_deleted")
     private Integer isDeleted;
 }
-

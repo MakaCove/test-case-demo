@@ -8,6 +8,9 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * 用例内容快照历史表 {@code test_case_histories}：{@code snapshot_json} 存当时用例全量或增量结构。
+ */
 @Data
 @TableName("test_case_histories")
 public class TestCaseHistoryEntity {
@@ -29,4 +32,3 @@ public class TestCaseHistoryEntity {
     @TableField("change_type")
     private String changeType;
 }
-

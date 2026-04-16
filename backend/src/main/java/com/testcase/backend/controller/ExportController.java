@@ -12,6 +12,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * 用例/版本导出任务：创建异步导出、查询状态、失败重试、下载生成的 Markdown 文件。
+ */
 @RestController
 @RequestMapping("/api/v1/exports")
 public class ExportController {
@@ -32,6 +35,7 @@ public class ExportController {
         return ApiResponse.success(exportService.search(projectId, versionId, status, pageNo, pageSize));
     }
 
+    /** 创建并触发导出任务 */
     @PostMapping
     public ApiResponse<ExportDtos.ExportItem> create(HttpServletRequest request, @Valid @RequestBody ExportDtos.CreateRequest body) {
         Long userId = (Long) request.getAttribute("loginUserId");
@@ -51,6 +55,7 @@ public class ExportController {
         return ApiResponse.success(exportService.retry(id, userId));
     }
 
+    /** 流式下载导出文件（Markdown） */
     @GetMapping("/{id}/download")
     public ResponseEntity<Resource> download(@PathVariable Long id) {
         Resource r = exportService.download(id);
@@ -61,4 +66,3 @@ public class ExportController {
                 .body(r);
     }
 }
-

@@ -8,6 +8,10 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * UI 自然语言用例表 {@code ui_nl_cases}：描述用户要以自然语言驱动的界面场景；
+ * {@code tags_json} 为标签等扩展 JSON；{@code status} 为用例侧状态（取值由业务约定）。
+ */
 @Data
 @TableName("ui_nl_cases")
 public class UiNlCaseEntity {
@@ -36,6 +40,7 @@ public class UiNlCaseEntity {
     @TableField("base_url")
     private String baseUrl;
 
+    /** 凭证引用标识，不存明文密码 */
     @TableField("credential_ref")
     private String credentialRef;
 

@@ -35,6 +35,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.UUID;
 
+/**
+ * 接口用例领域服务：分页检索、CRUD、批量、状态补丁；列表附带项目/版本名与需求资产摘要；
+ * 支持从生成任务结果 JSON 解析并批量写入（{@link ApiTestCaseParser}）。
+ */
 @Service
 public class ApiTestCaseService {
     private static final Logger log = LoggerFactory.getLogger(ApiTestCaseService.class);

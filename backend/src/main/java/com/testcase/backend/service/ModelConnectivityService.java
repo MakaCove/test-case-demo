@@ -13,6 +13,9 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Locale;
 
+/**
+ * 模型连通性探测：Ollama 走 {@code GET /api/tags}；否则按 OpenAI 兼容先 {@code GET /v1/models}，失败再极小 {@code chat/completions} 探测。
+ */
 @Service
 public class ModelConnectivityService {
     private static final Logger log = LoggerFactory.getLogger(ModelConnectivityService.class);
@@ -21,6 +24,7 @@ public class ModelConnectivityService {
             .connectTimeout(Duration.ofSeconds(5))
             .build();
 
+    /** @return 人类可读探测结果摘要；失败抛 {@link IllegalStateException} */
     public String testConnection(ModelConfigEntity cfg, String prompt) {
         String provider = (cfg.getProvider() == null ? "" : cfg.getProvider()).trim().toLowerCase(Locale.ROOT);
         String baseUrl = StringUtils.hasText(cfg.getBaseUrl()) ? cfg.getBaseUrl().trim() : "";

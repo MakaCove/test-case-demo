@@ -27,6 +27,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 
+/**
+ * 大模型连接配置（供应商、baseUrl、模型名、密钥占位等）：分页、CRUD、启用/禁用、连通性探测。
+ */
 @RestController
 @RequestMapping("/api/v1/model-configs")
 public class ModelConfigController {
@@ -139,6 +142,7 @@ public class ModelConfigController {
         return setStatus(request, id, StatusConstants.Switch.DISABLED);
     }
 
+    /** 发起一次补全/探测请求，返回模型侧可读结果摘要 */
     @PostMapping("/{id}/test-connection")
     public ApiResponse<String> testConnection(@PathVariable Long id, @RequestBody(required = false) ModelConfigDtos.TestConnectionRequest body) {
         ModelConfigEntity entity = modelConfigMapper.selectById(id);
@@ -151,6 +155,7 @@ public class ModelConfigController {
         return ApiResponse.success(result);
     }
 
+    /** 更新 {@link ModelConfigEntity#getStatus()}并记操作日志 */
     private ApiResponse<Void> setStatus(HttpServletRequest request, Long id, String status) {
         Long userId = (Long) request.getAttribute("loginUserId");
         if (userId == null) userId = 1L;
@@ -168,4 +173,3 @@ public class ModelConfigController {
         return ApiResponse.success(null);
     }
 }
-

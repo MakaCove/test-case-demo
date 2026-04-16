@@ -14,12 +14,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Parses LLM output into structured test case drafts. Supports:
- * <ul>
- *   <li>Raw JSON array or object with testCases / cases / caseList</li>
- *   <li>Markdown fenced blocks {@code ```json ... ```}</li>
- *   <li>camelCase and snake_case field names</li>
- * </ul>
+ * 解析 LLM 输出的功能用例草稿：支持 Markdown 代码围栏、根数组或 {@code testCases}/{@code cases}/{@code caseList}，
+ * 字段兼容 camelCase 与 snake_case。
  */
 @Component
 public class GeneratedTestCaseParser {
@@ -32,6 +28,7 @@ public class GeneratedTestCaseParser {
         this.objectMapper = objectMapper;
     }
 
+    /** @param raw 模型原始输出 */
     public List<GeneratedCaseDraft> parse(String raw) {
         List<GeneratedCaseDraft> out = new ArrayList<>();
         if (!StringUtils.hasText(raw)) {
@@ -208,6 +205,7 @@ public class GeneratedTestCaseParser {
         return direct.toString();
     }
 
+    /** 单条功能用例草稿，供 {@link TestCaseService} 落库 */
     public record GeneratedCaseDraft(
             String moduleName,
             String featureName,

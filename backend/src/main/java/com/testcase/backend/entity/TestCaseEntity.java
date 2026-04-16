@@ -8,6 +8,10 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * 功能/手工测试用例表 {@code test_cases}：步骤、数据、预期等为可读文本字段；
+ * 执行/评审状态见 {@link com.testcase.backend.common.StatusConstants} 对应子类。
+ */
 @Data
 @TableName("test_cases")
 public class TestCaseEntity {
@@ -23,6 +27,7 @@ public class TestCaseEntity {
     @TableField("version_id")
     private Long versionId;
 
+    /** 来源生成任务，手工创建可为 null */
     @TableField("source_task_id")
     private Long sourceTaskId;
 
@@ -84,4 +89,3 @@ public class TestCaseEntity {
     @TableField("is_deleted")
     private Integer isDeleted;
 }
-

@@ -7,6 +7,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 功能/手工用例 DTO：列表、详情（含状态日志与历史快照）、CRUD、批量、状态补丁、从生成任务物化。
+ */
 public class TestCaseDtos {
     public record RequirementAssetBrief(
             String assetCode,
@@ -15,6 +18,9 @@ public class TestCaseDtos {
     ) {
     }
 
+    /**
+     * 列表项：步骤、预期等为可读文本字段；{@code requirementAssets} 为展示用关联需求。
+     */
     public record CaseItem(
             Long id,
             String caseNo,
@@ -50,6 +56,7 @@ public class TestCaseDtos {
     ) {
     }
 
+    /** 单字段状态变更流水 */
     public record StatusLogItem(
             Long id,
             Long caseId,
@@ -62,6 +69,7 @@ public class TestCaseDtos {
     ) {
     }
 
+    /** 用例快照历史 */
     public record HistoryItem(
             Long id,
             Long caseId,
@@ -72,6 +80,7 @@ public class TestCaseDtos {
     ) {
     }
 
+    /** 详情：用例 + 状态日志 + 历史 */
     public record CaseDetail(
             CaseItem testCase,
             List<StatusLogItem> statusLogs,
@@ -124,6 +133,7 @@ public class TestCaseDtos {
     ) {
     }
 
+    /** 从生成任务落库用例时的可选条数上限 */
     public record MaterializeFromTaskRequest(
             Integer count
     ) {
@@ -134,4 +144,3 @@ public class TestCaseDtos {
     ) {
     }
 }
-

@@ -6,7 +6,12 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * UI 自然语言自动化：用例、任务、规划/执行步骤、报告及 Runner 相关请求体。
+ * {@code phase} 在步骤上区分规划（plan）与执行（exec）等，由服务层定义取值。
+ */
 public class UiNlDtos {
+    /** 创建 NL 用例：含目标环境、入口 URL、凭证引用等 */
     public record CreateCaseRequest(
             @NotNull(message = "projectId is required") Long projectId,
             @NotNull(message = "versionId is required") Long versionId,
@@ -51,6 +56,7 @@ public class UiNlDtos {
     ) {
     }
 
+    /** 创建执行任务：绑定用例、模型、模板及浏览器/超时等 Runner 参数 */
     public record CreateTaskRequest(
             @NotNull(message = "projectId is required") Long projectId,
             @NotNull(message = "versionId is required") Long versionId,
@@ -75,6 +81,10 @@ public class UiNlDtos {
     ) {
     }
 
+    /**
+     * 任务摘要：{@code status} 多为规划流水线状态，{@code lastExecStatus} 为最近对接 Runner 的执行结果；
+     * {@code runnerRunId} 与外部 ui-runner 对齐。
+     */
     public record TaskItem(
             Long id,
             Long projectId,
@@ -104,6 +114,7 @@ public class UiNlDtos {
     ) {
     }
 
+    /** 单步：规划或执行轨迹中的一条，{@code phase} 区分来源表 */
     public record StepItem(
             Long id,
             Long taskId,
@@ -133,6 +144,7 @@ public class UiNlDtos {
     ) {
     }
 
+    /** 执行报告元数据；HTML 路径等用于下载接口 */
     public record ReportItem(
             Long id,
             String reportNo,
@@ -154,9 +166,11 @@ public class UiNlDtos {
     ) {
     }
 
+    /** 预留：启动任务（若路由使用 body占位） */
     public record StartTaskRequest() {
     }
 
+    /** 预留：触发规划/执行（若路由使用 body 占位） */
     public record ExecuteTaskRequest() {
     }
 

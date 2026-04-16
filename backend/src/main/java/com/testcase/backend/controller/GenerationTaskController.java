@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * AI 生成用例任务：提交、分页列表、详情、更新元数据、取消、中断、重试、启动队列、批量删除。
+ */
 @RestController
 @RequestMapping("/api/v1/generation-tasks")
 public class GenerationTaskController {
@@ -79,6 +82,7 @@ public class GenerationTaskController {
         return ApiResponse.success(null);
     }
 
+    /** 运行中任务协作中断，可附原因 */
     @PostMapping("/{taskId}/interrupt")
     public ApiResponse<Void> interrupt(
             HttpServletRequest request,
@@ -103,6 +107,7 @@ public class GenerationTaskController {
         return ApiResponse.success(generationTaskService.retry(taskId, userId));
     }
 
+    /** 将排队任务投入执行（与具体 Runner 策略由 Service 实现） */
     @PostMapping("/{taskId}/start")
     public ApiResponse<Void> start(HttpServletRequest request, @PathVariable Long taskId) {
         Long userId = (Long) request.getAttribute("loginUserId");
@@ -126,4 +131,3 @@ public class GenerationTaskController {
         return ApiResponse.success(null);
     }
 }
-

@@ -10,6 +10,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * 功能/手工用例主 CRUD：检索、创建、详情、更新、删除、批量操作、状态补丁，
+ * 以及从生成任务物化落库 {@link #materializeFromTask}。
+ */
 @RestController
 @RequestMapping("/api/v1/test-cases")
 public class TestCaseController {
@@ -94,6 +98,9 @@ public class TestCaseController {
         return ApiResponse.success(testCaseService.updateStatus(caseId, body == null ? new TestCaseDtos.UpdateStatusRequest(null, null, null, null) : body, userId));
     }
 
+    /**
+     * 将指定生成任务产出转为本版本下的正式用例；{@code count} 可选上限由 DTO 决定。
+     */
     @PostMapping("/materialize-from-task/{taskId}")
     public ApiResponse<Integer> materializeFromTask(
             HttpServletRequest request,
@@ -106,4 +113,3 @@ public class TestCaseController {
         return ApiResponse.success(created);
     }
 }
-

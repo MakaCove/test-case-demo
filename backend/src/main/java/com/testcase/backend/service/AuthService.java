@@ -17,6 +17,10 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * 认证服务：内存 {@code token -> userId} 会话（非 JWT）、BCrypt 密码、注册登录改密；
+ * {@link #ensureAdminPasswordSecurity()} 在启动时将非 bcrypt 的 admin 密码迁移为配置项哈希。
+ */
 @Service
 public class AuthService {
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);

@@ -23,6 +23,9 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * 根据任务、用例、报告与执行步骤生成可读 HTML 报告，写入 {@code uploads/ui-nl-reports}（由 {@code app.storage.base-path} 决定根目录）。
+ */
 @Service
 public class UiNlHtmlReportService {
     private static final Logger log = LoggerFactory.getLogger(UiNlHtmlReportService.class);

@@ -8,6 +8,10 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * UI 任务规划步骤表 {@code ui_nl_task_steps}：Planner生成的步骤（标题、操作类型、输入与预期），
+ * 执行时的截图等仅在 {@link UiNlTaskExecStepEntity}。
+ */
 @Data
 @TableName("ui_nl_task_steps")
 public class UiNlTaskStepEntity {

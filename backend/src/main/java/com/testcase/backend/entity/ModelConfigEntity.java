@@ -8,6 +8,10 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * 大模型连接配置表 {@code model_configs}：调用第三方 API 的 baseUrl、模型名、加密后密钥等；
+ * {@code status} 见 {@link com.testcase.backend.common.StatusConstants.Switch}。
+ */
 @Data
 @TableName("model_configs")
 public class ModelConfigEntity {
@@ -23,6 +27,7 @@ public class ModelConfigEntity {
     @TableField("model_key")
     private String modelKey;
 
+    /** 前端/网关加密后的密钥密文 */
     @TableField("api_key_encrypted")
     private String apiKeyEncrypted;
 
@@ -48,4 +53,3 @@ public class ModelConfigEntity {
     @TableField("is_deleted")
     private Integer isDeleted;
 }
-

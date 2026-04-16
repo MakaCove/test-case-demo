@@ -5,7 +5,11 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 
+/**
+ * 导出任务：异步生成 Markdown 等产物，{@code requestJson} 结构见 {@link ExportRequestOptions}。
+ */
 public class ExportDtos {
+    /** 导出记录列表/详情 */
     public record ExportItem(
             Long id,
             String exportNo,
@@ -26,6 +30,7 @@ public class ExportDtos {
     ) {
     }
 
+    /** 提交导出：{@code requestJson} 可选，解析规则见 {@link ExportRequestOptions#parseOrDefault} */
     public record CreateRequest(
             @NotNull(message = "projectId is required") Long projectId,
             @NotNull(message = "versionId is required") Long versionId,
@@ -35,4 +40,3 @@ public class ExportDtos {
     ) {
     }
 }
-

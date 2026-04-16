@@ -24,6 +24,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 
+/**
+ * 提示词模板：按名称/状态/作用域分页；创建时默认 GLOBAL 作用域；更新递增 versionNo；软删；启用/禁用。
+ */
 @RestController
 @RequestMapping("/api/v1/prompt-templates")
 public class PromptTemplateController {
@@ -154,4 +157,3 @@ public class PromptTemplateController {
         return ApiResponse.success(null);
     }
 }
-

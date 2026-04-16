@@ -33,6 +33,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * 导出服务：按版本将功能/接口用例汇总为 Markdown 文件，记录 {@link ExportRecordEntity}；
+ * 导出范围由 {@link ExportRequestOptions} 解析 {@code request_json}。
+ */
 @Service
 public class ExportService {
     private static final Logger log = LoggerFactory.getLogger(ExportService.class);

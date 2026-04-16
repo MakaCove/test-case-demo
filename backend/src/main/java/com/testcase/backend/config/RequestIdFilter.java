@@ -12,8 +12,18 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.UUID;
 
+/**
+ * 每个 HTTP 请求生成或透传 {@link #HEADER_REQUEST_ID}：
+ * <ul>
+ *   <li>写入 {@link RequestContext}，供 {@link com.testcase.backend.common.ApiResponse} 等回传</li>
+ *   <li>放入 SLF4J {@link MDC}，日志可按 requestId 串联</li>
+ *   <li>响应头回写同一 ID，便于前端与网关对账</li>
+ * </ul>
+ * 在 {@code finally} 中清理 MDC 与 ThreadLocal，避免线程池复用串号。
+ */
 @Component
 public class RequestIdFilter extends OncePerRequestFilter {
+    /** 与前端/网关约定的请求 ID 头名称 */
     public static final String HEADER_REQUEST_ID = "X-Request-Id";
 
     @Override
@@ -34,4 +44,3 @@ public class RequestIdFilter extends OncePerRequestFilter {
         }
     }
 }
-

@@ -8,6 +8,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * API 用例（接口测试场景）的 CRUD 与检索：与 {@link TestCaseController} 区分数据源/领域。
+ * 操作人取自 {@code loginUserId}，缺省回退 1L（与项目内其它控制器一致）。
+ */
 @RestController
 @RequestMapping("/api/v1/api-test-cases")
 public class ApiTestCaseController {
@@ -18,6 +22,7 @@ public class ApiTestCaseController {
         this.apiTestCaseService = apiTestCaseService;
     }
 
+    /** 分页检索，支持项目/版本/来源任务/模块/优先级/执行与评审状态/关键词 */
     @GetMapping
     public ApiResponse<PagedResult<ApiTestCaseDtos.CaseItem>> list(
             @RequestParam(defaultValue = "1") int pageNo,
@@ -80,6 +85,7 @@ public class ApiTestCaseController {
         return ApiResponse.success(null);
     }
 
+    /** 局部更新执行/评审等状态；body 缺省时传空 DTO 由服务层解释 */
     @PatchMapping("/{caseId}/status")
     public ApiResponse<ApiTestCaseDtos.CaseItem> updateStatus(
             HttpServletRequest request,

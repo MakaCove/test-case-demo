@@ -20,6 +20,9 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 功能用例服务：CRUD、批量、状态与评审、历史与状态流水；解析生成任务产出（{@link GeneratedTestCaseParser}）并支持物化落库。
+ */
 @Service
 public class TestCaseService {
     private static final Logger log = LoggerFactory.getLogger(TestCaseService.class);

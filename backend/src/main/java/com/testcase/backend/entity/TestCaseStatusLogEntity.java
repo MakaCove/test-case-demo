@@ -8,6 +8,9 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * 用例字段级状态变更流水表 {@code test_case_status_logs}：如执行状态、评审状态的单字段前后值。
+ */
 @Data
 @TableName("test_case_status_logs")
 public class TestCaseStatusLogEntity {
@@ -34,4 +37,3 @@ public class TestCaseStatusLogEntity {
     @TableField("changed_at")
     private LocalDateTime changedAt;
 }
-

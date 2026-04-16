@@ -13,6 +13,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 认证与账号：登录、注册、登出、当前用户、改密。
+ * {@code /login}、{@code /register}、{@code /logout} 在 {@link com.testcase.backend.config.WebCorsConfig} 中排除鉴权；
+ * {@code /me} 与 {@code /change-password} 需携带 Bearer Token。
+ */
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
@@ -37,6 +42,7 @@ public class AuthController {
         return ApiResponse.success(response);
     }
 
+    /** 吊销会话：Authorization 可选，无则仅返回成功 */
     @PostMapping("/logout")
     public ApiResponse<Void> logout(@RequestHeader(value = "Authorization", required = false) String authorization) {
         String token = extractBearerToken(authorization);
@@ -44,6 +50,7 @@ public class AuthController {
         return ApiResponse.success(null);
     }
 
+    /** 当前登录用户信息，依赖 Bearer Token */
     @GetMapping("/me")
     public ApiResponse<AuthDtos.UserInfo> me(@RequestHeader(value = "Authorization", required = false) String authorization) {
         String token = extractBearerToken(authorization);
@@ -60,6 +67,7 @@ public class AuthController {
         return ApiResponse.success(null);
     }
 
+    /** 同 {@link com.testcase.backend.config.AuthInterceptor}：支持 {@code Bearer } 前缀或整段 token */
     private String extractBearerToken(String authorization) {
         if (authorization == null || authorization.isBlank()) {
             return null;

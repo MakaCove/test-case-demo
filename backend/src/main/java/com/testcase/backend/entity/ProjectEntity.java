@@ -8,6 +8,9 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * 项目表 {@code projects}：{@code code} 在未删除记录中业务唯一。
+ */
 @Data
 @TableName("projects")
 public class ProjectEntity {

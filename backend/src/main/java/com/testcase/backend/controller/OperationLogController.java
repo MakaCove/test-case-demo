@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 操作审计日志只读查询：按对象类型、动作分页检索。
+ */
 @RestController
 @RequestMapping("/api/v1/operation-logs")
 public class OperationLogController {

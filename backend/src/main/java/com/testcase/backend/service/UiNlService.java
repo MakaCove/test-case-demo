@@ -44,6 +44,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
+/**
+ * UI 自然语言任务核心服务：用例与任务 CRUD；规划（LLM 写 {@code ui_nl_task_steps}）与执行（{@link UiRunnerClient}）分阶段；
+ * 轮询 Runner 状态、同步执行步骤、生成报告与截图路径解析。
+ */
 @Service
 public class UiNlService {
     private static final Logger log = LoggerFactory.getLogger(UiNlService.class);
